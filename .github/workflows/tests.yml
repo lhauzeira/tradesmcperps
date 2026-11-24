@@ -31,3 +31,5 @@ jobs:
         run: python -m smc_agent.demo
       - name: Run synthetic alert preview
         run: python -m smc_agent.alert_demo
+      - name: Run synthetic lifecycle and SQLite journal demo
+        run: python -m smc_agent.lifecycle_demo
