@@ -1,0 +1,2 @@
+# Offline engine & tests use Python 3.11+ standard library only.
+# MetaTrader5 and API clients will be optional in the connector phase.
