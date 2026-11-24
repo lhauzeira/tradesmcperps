@@ -12,6 +12,13 @@ import sqlite3
 
 from .lifecycle import PublishedSignal, Observation, _aware
 
+_ALLOWED_STATUSES = frozenset({
+    "NO_POST_PUBLICATION_DATA", "AWAITING_ENTRY_LEVEL",
+    "ENTRY_LEVEL_TOUCHED_AWAITING_OUTCOME", "TARGET_LEVEL_TOUCHED",
+    "STOP_LEVEL_TOUCHED", "AMBIGUOUS_ENTRY_BAR", "AMBIGUOUS_EXIT_BAR",
+    "GAP_EXIT_UNPRICED", "EXPIRED_NO_ENTRY", "UNRESOLVED_AFTER_ENTRY",
+})
+
 
 def _utc(moment: datetime) -> str:
     _aware(moment, "timestamp")
@@ -87,6 +94,8 @@ class SignalJournal:
     def append(self, observation: Observation, *, as_of: datetime) -> bool:
         """Append a stable observation; never record this as a verified trade."""
         cutoff = _utc(as_of)
+        if observation.status not in _ALLOWED_STATUSES:
+            raise ValueError("Only research observation states may be journaled")
         if observation.bars_examined < 0:
             raise ValueError("Negative bar count")
         published = self._connection.execute(
