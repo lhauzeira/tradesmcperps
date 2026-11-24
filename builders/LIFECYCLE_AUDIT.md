@@ -34,9 +34,15 @@ No state above implies that an order was placed.
 10. Never transfer a trade's OHLC outcome across MT5 spot CFD, CME futures or
     MyFundedPerps perpetuals using an unverified fixed price offset.
 
-## Run synthetic tests (no internet or credentials)
+## Run synthetic tests and demonstration (no internet or credentials)
 
     python -m unittest discover -s tests -v
+    python -m smc_agent.lifecycle_demo
+
+SQLite journal storage via smc_agent/journal.py stores only a deterministic signal ID, venue,
+instrument, static price levels and audit observations. Identical events are ignored
+across process restarts, and statuses implying realized profits cannot be inserted.
+Do not commit journal database files.
 
 ## Privately audit the normalized Telegram export
 
