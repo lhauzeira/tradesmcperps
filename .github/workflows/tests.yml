@@ -6,9 +6,11 @@ on:
       - main
       - feature/smc-agent-builders-v01
       - feature/signal-alerts-v02
+      - feature/signal-lifecycle-v03
   pull_request:
     branches:
       - main
+      - feature/signal-alerts-v02
 
 permissions:
   contents: read
