@@ -6,9 +6,11 @@ on:
       - main
       - feature/smc-agent-builders-v01
       - feature/signal-alerts-v02
+      - feature/signal-lifecycle-v03
   pull_request:
     branches:
       - main
+      - feature/signal-alerts-v02
 
 permissions:
   contents: read
@@ -29,3 +31,5 @@ jobs:
         run: python -m smc_agent.demo
       - name: Run synthetic alert preview
         run: python -m smc_agent.alert_demo
+      - name: Run synthetic lifecycle and SQLite journal demo
+        run: python -m smc_agent.lifecycle_demo
