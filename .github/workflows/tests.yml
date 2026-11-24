@@ -24,3 +24,5 @@ jobs:
           python-version: '3.11'
       - name: Run offline unit tests
         run: python -m unittest discover -s tests -v
+      - name: Run offline Builder demo
+        run: python -m smc_agent.demo
