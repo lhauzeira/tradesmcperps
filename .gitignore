@@ -16,3 +16,8 @@ private_exports/
 telegram_exports/
 ICC_Bot_Auditoria_2026.csv
 Relatorio_Analise_ICC_Telegram.md
+
+# Local research journals and proprietary price records
+*.sqlite3
+*.sqlite3-*
+*.db
