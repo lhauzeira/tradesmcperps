@@ -25,7 +25,8 @@ class EngineTests(unittest.TestCase):
             Candle(datetime(2026,1,1), 10, 11, 9, 10)
 
     def test_fractals_only_after_confirmation(self):
-        b = make([10, 11, 12, 16, 12, 11, 10, 11, 12])
+        b = [Candle(BASE + timedelta(minutes=5*i), v, v+.1, v-.1, v)
+             for i, v in enumerate([10, 11, 12, 16, 12, 11, 10, 11, 12])]
         self.assertFalse(any(p.index == 3 for p in confirmed_pivots(b, available_at=4)))
         self.assertTrue(any(p.index == 3 and p.confirmed_at == 5
                             for p in confirmed_pivots(b, available_at=5)))
