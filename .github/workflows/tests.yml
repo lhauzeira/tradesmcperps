@@ -7,10 +7,12 @@ on:
       - feature/smc-agent-builders-v01
       - feature/signal-alerts-v02
       - feature/signal-lifecycle-v03
+      - feature/native-quotes-v04
   pull_request:
     branches:
       - main
       - feature/signal-alerts-v02
+      - feature/signal-lifecycle-v03
 
 permissions:
   contents: read
@@ -33,3 +35,5 @@ jobs:
         run: python -m smc_agent.alert_demo
       - name: Run synthetic lifecycle and SQLite journal demo
         run: python -m smc_agent.lifecycle_demo
+      - name: Run synthetic bid-ask quote feed demo
+        run: python -m smc_agent.quote_demo
