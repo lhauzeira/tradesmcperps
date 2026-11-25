@@ -67,6 +67,24 @@ PAPER_TARGET_MODEL result but **zero verified fills** and zero sent orders.
 The same exact synthetic data with unverified session offset is blocked
 with SESSION_UNVERIFIED; the experiment never silently authorizes trading.
 
+## Audit all scenarios, not just winners
+
+Source: smc_agent/paper_report.py
+
+The batch reporter summarizes **every** submitted paper event and refuses
+duplicate signal IDs. It keeps separate counts for modeled target touches,
+modeled stop touches, and all blocked/inconclusive scenarios.
+
+It can show the arithmetic sum of modeled outcomes **for the resolved
+subset only**, but deliberately leaves verified win rate, verified profit
+factor and realized broker P&L unset. A report limited to resolved
+simulations would otherwise produce misleading headline statistics.
+
+Do not convert these partial-paper metrics into client performance,
+trading recommendations, or Builders Program adoption/profitability
+claims. Count all attempted signals, report exclusions and subsequently
+validate on out-of-sample native broker data.
+
 ## No historical ICC performance claims
 
 The user's Telegram historical messages are not broker fills and may
