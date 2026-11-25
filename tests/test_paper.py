@@ -192,6 +192,13 @@ class PaperTests(unittest.TestCase):
                    policy=assumptions(max_entry_drift_price=Decimal(".01")))
         self.assertEqual(result.status,"NO_ENTRY_PRICE_DRIFT")
 
+    def test_exit_side_quote_already_beyond_stop_blocks_entry(self):
+        # Ask is inside the plan's range; the simultaneous Bid is below
+        # the stop. A fabricated stop fill would be unjustified.
+        result=run([bar(5)],intent=plan(stop=4000.10))
+        self.assertEqual(result.status,"NO_ENTRY_EXIT_QUOTE_OUTSIDE_LEVELS")
+        self.assertIsNone(result.modeled_net_usd)
+
     def test_risk_limit_refused_below_min_lot(self):
         result=run([bar(5)],
                    policy=assumptions(risk_budget_usd=Decimal(".02"),
