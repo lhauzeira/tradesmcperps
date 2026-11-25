@@ -9,12 +9,14 @@ on:
       - feature/signal-lifecycle-v03
       - feature/native-quotes-v04
       - feature/xm-gold-risk-v05
+      - feature/offline-paper-v06
   pull_request:
     branches:
       - main
       - feature/signal-alerts-v02
       - feature/signal-lifecycle-v03
       - feature/native-quotes-v04
+      - feature/xm-gold-risk-v05
 
 permissions:
   contents: read
@@ -41,3 +43,5 @@ jobs:
         run: python -m smc_agent.quote_demo
       - name: Run synthetic XM GOLD risk calculation demo
         run: python -m smc_agent.xm_gold_risk
+      - name: Run fabricated session-aware paper replay
+        run: python -m smc_agent.paper_demo
