@@ -60,6 +60,38 @@ class MT5Adapter:
             for r in sorted_rates
         ]
 
+    def quote_history(self, start: datetime, end: datetime, *,
+                      timeframe_seconds: int, as_of: datetime, venue: str,
+                      max_ticks: int = 500000):
+        """Read native MT5 bid/ask tick snapshots and aggregate closed UTC bars.
+
+        Requires an initialized, authenticated terminal. This is READ-ONLY.
+        Venue must identify the real broker feed; do not map spot to futures.
+        Historical availability and complete quote coverage need manual validation.
+        """
+        from .lifecycle import _aware
+        from .ticks import aggregate_bidask_ticks
+        for label, moment in (("start", start), ("end", end), ("as_of", as_of)):
+            _aware(moment, label)
+        if start >= end or end > as_of:
+            raise ValueError("Tick request time range is invalid or in the future")
+        if not venue or venue == "MT5-UNVERIFIED":
+            raise ValueError("A verified broker-specific venue label is required")
+        if max_ticks < 1:
+            raise ValueError("Maximum tick count must be positive")
+        ticks = self.mt5.copy_ticks_range(
+            self.symbol, start.astimezone(timezone.utc),
+            end.astimezone(timezone.utc), self.mt5.COPY_TICKS_INFO
+        )
+        if ticks is None or len(ticks) == 0:
+            raise RuntimeError("MT5 did not return native bid/ask tick history")
+        return aggregate_bidask_ticks(
+            ticks, venue=venue, symbol=self.symbol,
+            source="MT5_COPY_TICKS_INFO_UNVERIFIED_COVERAGE",
+            timeframe_seconds=timeframe_seconds, as_of=as_of,
+            max_ticks=max_ticks,
+        )
+
     def account(self):
         value = self.mt5.account_info()
         if value is None:
