@@ -66,6 +66,27 @@ observation as *blocked* rather than counting an apparent win or loss.
 
 The SQLite journal accepts spread vetoes as research-only events.
 
+## Read-only MetaTrader 5 tick bridge (not connected to a user account)
+
+The adapter method MT5Adapter.quote_history() can request a bounded window
+of quote ticks using the MetaTrader5 COPY_TICKS_INFO interface. It takes
+explicit start/end/as_of timestamps and a broker-specific venue label,
+then passes the tick snapshots through aggregate_bidask_ticks().
+
+- This interface has **not yet been exercised against an authenticated
+  XM terminal**. Its automated tests use an in-memory fake MT5 object.
+- Actual terminal access requires the broker application and the
+  MetaTrader5 Python library on a compatible host. GitHub stores the code
+  but does not provide a terminal or a continuously running robot.
+- Broker-specific tick history may be truncated, sparse or unavailable.
+  Coverage and timezone behavior must be checked before drawing conclusions.
+- Each output bar's open/close represent the first and last **observed tick**
+  in the UTC-aligned interval; missing intervals are not interpolated.
+- Ticks arriving after the specified cutoff, invalid quotes, crossed spreads,
+  unsorted timestamps and incomplete final bars are rejected or omitted.
+- The connector uses ONLY COPY_TICKS_INFO, never order_send; real order
+  submission remains disabled in the entire prototype.
+
 ## What is still missing?
 
 1. Reliable, authorized platform-native historical **bid and ask** feed for
