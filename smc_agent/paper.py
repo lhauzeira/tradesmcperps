@@ -233,6 +233,12 @@ def replay_market_next_open(
             if ((signal.side == "buy" and not stop < entry_price < target) or
                 (signal.side == "sell" and not target < entry_price < stop)):
                 return PaperResult(signal.signal_id, "NO_ENTRY_INVALID_QUOTE", n-1)
+            # A spread can put the *exit* quote beyond the stop even though
+            # the simulated entry quote is inside the price boundaries.
+            # Do not fabricate an immediately viable trade in that case.
+            if ((signal.side == "buy" and not stop < exit_open < target) or
+                (signal.side == "sell" and not target < exit_open < stop)):
+                return PaperResult(signal.signal_id, "NO_ENTRY_EXIT_QUOTE_OUTSIDE_LEVELS", n-1)
             # Only the hypothetical STOP scenario + explicit reserve is used
             # for sizing; no slippage guarantee or broker margin available.
             risk_per_lot = (
