@@ -112,8 +112,11 @@ class QuoteAuditTests(unittest.TestCase):
 
     def test_wrong_venue_fails(self):
         plan = signal(venue="MFP-SANDBOX")
+        feed = QuoteHistory("SYNTHETIC_ONLY", "TEST_XAUUSD",
+                            "fabricated_for_tests", (bar(5),))
         with self.assertRaisesRegex(ValueError, "venue"):
-            watch([bar(5)], plan=plan)
+            observe_quotes(plan, feed, as_of=BASE+timedelta(minutes=20),
+                           quote_policy="buy_ask_sell_bid")
 
     def test_unknown_quote_basis_fails(self):
         with self.assertRaisesRegex(ValueError, "convention"):
