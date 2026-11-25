@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone, timedelta
 from math import isfinite
+from numbers import Integral
 from typing import Iterable, Mapping
 
 from .lifecycle import _aware
@@ -47,9 +48,9 @@ def aggregate_bidask_ticks(
         try:
             raw_ms = tick["time_msc"]
             # Python's bool is a subtype of int; exclude it.
-            if isinstance(raw_ms, bool) or not isinstance(raw_ms, int):
+            if isinstance(raw_ms, bool) or not isinstance(raw_ms, Integral):
                 raise ValueError("time_msc must be integer UTC epoch milliseconds")
-            millis = raw_ms
+            millis = int(raw_ms)
             bid, ask = float(tick["bid"]), float(tick["ask"])
         except (KeyError, TypeError, ValueError, OverflowError) as error:
             raise ValueError("Tick must contain valid time_msc/bid/ask fields") from error
