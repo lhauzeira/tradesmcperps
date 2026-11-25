@@ -21,3 +21,9 @@ Relatorio_Analise_ICC_Telegram.md
 *.sqlite3
 *.sqlite3-*
 *.db
+
+# Native raw broker ticks and locally generated summaries
+GOLD_*.csv
+*_MT5_TICKS_*.csv
+raw_market_data/
+market_data_private/
