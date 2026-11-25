@@ -57,7 +57,8 @@ class TickAggregationTests(unittest.TestCase):
         self.assertEqual(observation.bars_examined, 2)
 
     def test_incomplete_last_bar_excluded(self):
-        history = aggregate(raw(), cutoff=12)
+        # Supply only ticks observed by the cutoff; future ticks are rejected.
+        history = aggregate(raw()[:5], cutoff=12)
         self.assertEqual(len(history.bars), 2)
         self.assertEqual(history.bars[-1].closed_at, BASE+timedelta(minutes=10))
 
