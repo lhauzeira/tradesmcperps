@@ -35,8 +35,8 @@ def _digits(value: Any) -> int | None:
 
 def audit_demo_instruments(mt5: Any, symbols: tuple[str,...]) -> dict:
     """Account verification must precede ALL instrument reads."""
-    check_demo_account(mt5.account_info(), mt5)
     acc=mt5.account_info()
+    check_demo_account(acc, mt5)
     currency=getattr(acc,"currency",None)
     if type(currency) is not str or len(currency)!=3 or not currency.isupper():
         raise RuntimeError("Moeda da conta DEMO indisponível")
