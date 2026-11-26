@@ -33,3 +33,7 @@ monitoramento_privado/
 MONITOR_LOCAL_DEMO.html
 MONITOR_LOCAL_DEMO.html.tmp
 *.jsonl
+
+# Local multi-market monitor HTML (never publish market observations)
+PAINEL_MULTI_DEMO.html
+PAINEL_MULTI_DEMO.html.tmp
