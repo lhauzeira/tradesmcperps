@@ -25,20 +25,20 @@ def context(biases, *, unavailable=()):
 class MTFSignalContextTests(unittest.TestCase):
     def test_full_buy_confluence_is_only_a_research_tag(self):
         item=classify_signal_context(
-            "buy",context(("ALTA","ALTA","ALTA","ALTA","BAIXA"))
+            "buy",context(("ALTA","ALTA","ALTA","ALTA","ALTA"))
         )
-        self.assertEqual(item.label,"CONFLUENCIA_COMPLETA_OBSERVADA")
+        self.assertEqual(item.label,"CINCO_PERIODOS_ALINHADOS")
         self.assertEqual(item.higher_tf,"H4_A_FAVOR")
         self.assertEqual(item.intermediates,"AMBOS_A_FAVOR")
-        self.assertEqual(item.opposed,("M5",))
+        self.assertEqual(item.opposed,())
         self.assertFalse(item.can_submit_orders)
 
     def test_full_sell_confluence_is_only_a_research_tag(self):
         item=classify_signal_context(
-            "sell",context(("BAIXA","BAIXA","BAIXA","BAIXA","ALTA"))
+            "sell",context(("BAIXA","BAIXA","BAIXA","BAIXA","BAIXA"))
         )
-        self.assertEqual(item.label,"CONFLUENCIA_COMPLETA_OBSERVADA")
-        self.assertEqual(item.matched,("H4","H1","M30","M15"))
+        self.assertEqual(item.label,"CINCO_PERIODOS_ALINHADOS")
+        self.assertEqual(item.matched,("H4","H1","M30","M15","M5"))
 
     def test_h4_opposes_signal_regardless_of_intermediates(self):
         item=classify_signal_context(
@@ -78,7 +78,7 @@ class MTFSignalContextTests(unittest.TestCase):
             "sell",context(("BAIXA","BAIXA","BAIXA","NEUTRO","BAIXA"))
         )
         self.assertEqual(item.intermediates,"MAIS_A_FAVOR")
-        self.assertEqual(item.label,"CONFLUENCIA_COMPLETA_OBSERVADA")
+        self.assertEqual(item.label,"CONFLUENCIA_PARCIAL_OBSERVADA")
 
     def test_h4_neutral_is_not_countertrend(self):
         item=classify_signal_context(
@@ -100,7 +100,7 @@ class MTFSignalContextTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"never authorizes"):
             replace(item,can_submit_orders=True)
         self.assertIs(item.to_log()["orders_authorized"],False)
-        self.assertEqual(item.to_log()["label"],"CONFLUENCIA_COMPLETA_OBSERVADA")
+        self.assertEqual(item.to_log()["label"],"CINCO_PERIODOS_ALINHADOS")
 
 
 if __name__ == "__main__":
