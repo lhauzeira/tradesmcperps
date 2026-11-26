@@ -27,6 +27,7 @@ def validate_all(*, root: Path | None = None) -> int:
         ("TESTES AUTOMATICOS", [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-q"]),
         ("CICLO FICTICIO DE ABERTURA/FECHAMENTO", [sys.executable, "-m", "smc_agent.paper_execution"]),
         ("ORCAMENTO FICTICIO DE RISCO", [sys.executable, "-m", "smc_agent.multi_risk"]),
+        ("PREFLIGHT E REINICIO SIMULADOS", [sys.executable, "-m", "smc_agent.dry_run_pipeline"]),
     )
     for label, argv in commands:
         print(f"\n--- {label} ---", flush=True)
@@ -35,7 +36,7 @@ def validate_all(*, root: Path | None = None) -> int:
             print(f"\nFALHOU: {label}. Nenhum monitor foi iniciado.", flush=True)
             return result.returncode
     print("\n" + "=" * 67, flush=True)
-    print("VALIDACAO OFFLINE CONCLUIDA: TESTES E DOIS EXEMPLOS FICTICIOS OK.", flush=True)
+    print("VALIDACAO OFFLINE CONCLUIDA: TESTES E TRES ENSAIOS FICTICIOS OK.", flush=True)
     print("Isso NAO comprova lucro, execucao na corretora ou sistema final.", flush=True)
     print("Nenhuma ordem enviada.", flush=True)
     return 0
