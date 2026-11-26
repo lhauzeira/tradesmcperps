@@ -1,4 +1,24 @@
 GUIA PRÁTICO — SMC TRADING AGENT NO META TRADER 5 DA XM
+
+CORRECAO DE COMPATIBILIDADE WINDOWS (v0.11)
+Se a janela do teste offline mostrar erros como "'cho' nao e reconhecido"
+ou "'y' nao e reconhecido", o Windows esta perdendo o primeiro caractere
+de cada linha do arquivo .bat por causa da codificacao das quebras de linha.
+Isso significa que os testes Python NAO iniciaram, e nao que falharam.
+
+A versao 0.11 salva TODOS os arquivos .bat com terminadores de linha CRLF,
+e configura *.bat em .gitattributes para futuras atualizacoes.
+Baixe o ZIP da branch feature/windows-crlf-fix-v11 e EXTRAIA TUDO
+em uma pasta nova. Execute TESTAR_CODIGO_OFFLINE.bat dentro dessa pasta.
+Deve aparecer a linha "Ran ... tests" e, se a verificacao passar, "OK".
+Nao use o arquivo .bat da pasta antiga.
+
+Se ainda houver dificuldades, abra a pasta extraida pelo Explorador,
+clique na barra de endereco, digite cmd e Enter. Na janela preta, rode
+sem editar arquivo algum:
+  py -3.11 -m unittest discover -s tests -q
+Copie o resultado (nao sao solicitados logins nem credenciais).
+
 Versão 0.10 EXPERIMENTAL • Apenas conta DEMO • Nenhuma ordem é enviada
 
 O QUE VOCÊ VAI VER?
