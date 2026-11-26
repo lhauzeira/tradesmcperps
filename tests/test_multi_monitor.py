@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -51,6 +53,16 @@ def snapshot(symbol="GOLD",digits=2):
 
 
 class MultiMonitorTests(unittest.TestCase):
+    def test_cli_entrypoint_help_runs_without_connecting_mt5(self):
+        """Exercise __main__ / argparse as .bat does; no broker connection."""
+        result = subprocess.run(
+            [sys.executable, "-m", "smc_agent.multi_monitor", "--help"],
+            capture_output=True, text=True, timeout=20, check=False
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("--intervalo", result.stdout)
+        self.assertIn("--uma-vez", result.stdout)
+
     def test_symbols_from_editable_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/"ATIVOS_DEMO.txt"
