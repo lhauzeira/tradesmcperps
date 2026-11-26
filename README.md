@@ -12,6 +12,44 @@ A proof-of-concept that transforms selected Smart Money Concepts (SMC) rules int
 
 This is a compact implementation. Additional experiments with ATR-confirmed ZigZag, liquidity and volume confluences are maintained separately and still need to be reconciled.
 
+## v0.13 — Primeiro portão de segurança antes de ordens DEMO
+
+O monitor multiativos agora exibe, em cada instrumento, um diagnóstico de
+pré-execução no painel PAINEL_MULTI_DEMO.html, além dos sinais teóricos:
+
+- Cotação Bid/Ask e horário do tick reconciliado com o computador.
+- Falta de atualização, relógio incoerente, preço inválido e volatilidade.
+- Spread relativo ao ATR dos últimos 14 candles M5 já fechados, calculado
+  na **escala de preço de cada ativo** (não em pips/dólares fixos).
+- Informações de contrato como tick size, tick value, point, volume mínimo,
+  máximo, passo e modo de negociação que o MT5 informou.
+- **SESSAO_OU_FERIADO_NAO_VERIFICADO** é intencional: modo de negociação
+  e chegada de ticks NÃO garantem sessão aberta. Ainda precisamos validar
+  os horários/feriados específicos da XM por instrumento.
+
+O filtro experimental de spread > 25% do ATR M5 é um parâmetro de
+diagnóstico para estudos; não é garantia de execução adequada, não foi
+ajustado a estatísticas reais e **não altera os sinais SMC** da v0.12.
+
+Os resultados de pesquisa são registrados por símbolo em
+monitoramento_privado/analises_multi.jsonl, SEM conta, senha ou saldo.
+O monitor antigo GOLD continua com seu comportamento anterior.
+
+NÃO há ordens, fechamento de posições, envio ao Telegram, execução
+simulada contabilizada como real, leitura de posições ou permissão para
+operar. Em código, ReadinessReport.can_submit_orders é sempre False.
+Mesmo com todas as cotações coerentes, um teste adicional de sessão
+verificada não equivale a autorização para operar.
+
+Próximos marcos antes de qualquer ordem demo: contrato real por símbolo,
+horários especiais de cada CFD, risco/tamanho com moeda da conta e
+margem, simulador de estados/rejeições/duplicidade, kill switch, teste
+prospectivo em conta DEMO e autorização explícita do usuário.
+
+Para testar localmente: TESTAR_CODIGO_OFFLINE.bat, seguido de
+INICIAR_MONITOR_MULTIATIVOS_DEMO.bat, com XMGlobal-MT5 5 DEMO conectado.
+O código **ainda não foi validado com seus dados ao vivo na v0.13**.
+
 ## Monitor multiativos + Fibonacci OTE (v0.12 experimental)
 
 A versão 0.12 adiciona um scanner independente, **somente leitura**,
