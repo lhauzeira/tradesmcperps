@@ -170,16 +170,18 @@ class MultiTimeframeTests(unittest.TestCase):
         ),snap())
         self.assertEqual(report.frames[0].state,"INDISPONIVEL")
 
-    def test_no_lookahead_confirmed_pivot_structure_uses_only_closed_data(self):
-        data=bars("H4")
-        baseline=macro_bias(data)
-        # Last candle may move but no future close is added to confirm it.
-        future=replace(data[-1],high=data[-1].high+1000,close=data[-1].close)
-        self.assertEqual(macro_bias(data[:-1]),macro_bias(
-            data[:-1]))
-        self.assertEqual(macro_bias(data[:-2]),macro_bias(data[:-2]))
-        self.assertIn(baseline,(-1,0,1))
-        self.assertIsInstance(future,Candle)
+    def test_unclosed_h4_bar_is_blocked_not_used_as_future_confirmation(self):
+        # 16:00 raw broker H4 closes 20:00 broker (=18:00 UTC),
+        # still in progress at 17:21 UTC; no structural bias is returned.
+        current = bars("H4",raw_last=datetime(
+            2026,11,26,16,0,tzinfo=UTC
+        ))
+        report=observe_timeframes(
+            FakeAdapter(overrides={"H4":current}),snap()
+        )
+        self.assertEqual(report.frames[0].state,"INDISPONIVEL")
+        self.assertEqual(report.frames[0].bias,"NÃO AVALIADO")
+        self.assertEqual(report.available_count,4)
 
     def test_dashboard_renders_five_frames_without_promising_execution(self):
         context=observe_timeframes(FakeAdapter(),snap())
