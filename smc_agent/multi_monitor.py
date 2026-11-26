@@ -18,6 +18,7 @@ from .journal import SignalJournal
 from .lifecycle import PublishedSignal
 from .readiness import ReadinessReport, evaluate_readiness
 from .multi_timeframe import MultiTimeframeContext, observe_timeframes
+from .mtf_research import classify_signal_context
 
 SYMBOL_RE = re.compile(r"^[A-Za-z0-9._#-]{1,40}$")
 
@@ -141,6 +142,15 @@ def render_market_table(rows: tuple[MarketRow, ...], now_iso: str) -> str:
                 + '</tbody></table></div>'
             )
         signal = s.record
+        research_tag = (
+            classify_signal_context(signal.side, row.timeframes)
+            if signal is not None and row.timeframes is not None else None
+        )
+        research_html = (
+            f'<p>Confluência da hipótese SMC: <strong>{escape(research_tag.label)}</strong> '
+            '(rótulo de pesquisa; NÃO é filtro nem previsão de lucratividade).</p>'
+            if research_tag is not None else ""
+        )
         alert=('<p>Sem novo setup SMC confirmado.</p>' if signal is None else
                f'<p class="warning">APENAS PESQUISA — '
                f'{escape("COMPRA" if signal.side=="buy" else "VENDA")}: '
@@ -155,7 +165,7 @@ def render_market_table(rows: tuple[MarketRow, ...], now_iso: str) -> str:
             f'<div>H1<br><b>{escape(s.h1_bias)}</b></div></div>'
             f'<p>M5 fechado UTC: {escape(s.last_closed_m5_utc or "—")}</p>'
             f'<p>Deslocamento observado: {escape(s.clock_offset_label)}</p>'
-            f'{mtf_html}{fib}{safety_html}{alert}</section>'
+            f'{mtf_html}{fib}{research_html}{safety_html}{alert}</section>'
         )
     return f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta http-equiv="refresh" content="30"><meta name="viewport"
@@ -225,6 +235,10 @@ def monitor_many(*, root: Path | None = None, once: bool = False,
                                     if row.readiness is not None else ["SEM_VERIFICACAO"],
                                 "multi_timeframe":row.timeframes.to_log()
                                     if row.timeframes is not None else None,
+                                "mtf_signal_context":classify_signal_context(
+                                    s.record.side, row.timeframes
+                                ).to_log() if s.record is not None
+                                and row.timeframes is not None else None,
                                 "orders_sent":0
                             },ensure_ascii=False)+"\n")
                     if s.record is not None:
@@ -240,7 +254,12 @@ def monitor_many(*, root: Path | None = None, once: bool = False,
                                         "side":ev.side,"entry":ev.entry,
                                         "stop":ev.stop,"target":ev.target,
                                         "time_utc":ev.candle_closed_at.isoformat(),
-                                        "paper_only":True,"orders_sent":0
+                                        "paper_only":True,"orders_sent":0,
+                                        "multi_timeframe":row.timeframes.to_log()
+                                            if row.timeframes is not None else None,
+                                        "mtf_signal_context":classify_signal_context(
+                                            ev.side, row.timeframes
+                                        ).to_log() if row.timeframes is not None else None
                                     },ensure_ascii=False)+"\n")
                 _atomic_html(output,render_market_table(rows,now.isoformat()))
                 print(" | ".join(
