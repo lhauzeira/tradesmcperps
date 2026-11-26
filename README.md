@@ -1,5 +1,45 @@
 # SMC Trading Agent — Builders Prototype
 
+## Sessões e controle exclusivo de um futuro executor DEMO
+
+**smc_agent/session_calendar.py** — calendário UTC explícito,
+por instrumento **e por data**, incluindo janelas regulares, feriados
+e fechamento antecipado. A fonte, o horário de conferência e a validade
+do calendário precisam estar documentados. Sem cobertura de data,
+fonte ainda não validada, virada de dia ou horário fora das janelas,
+o módulo falha fechado. Não usa dia da semana, tick recente nem o
+trade_mode do MT5 como prova de sessão aberta. O código contém SOMENTE
+um exemplo completamente fictício e **não conhece os horários reais
+da XM por instrumento**. Mesmo dentro de uma janela programada,
+can_submit_orders permanece False. Os horários ainda deverão ser
+conferidos contra o calendário atualizado e específico da XM antes
+de habilitar qualquer envio de ordem no futuro.
+
+**smc_agent/demo_candidate.py** — combina sinal SMC M5 recente,
+qualidade da cotação, cálculo de perda/margem na moeda da conta e um
+rascunho de abertura com parâmetros da XM DEMO. Os flags de
+symbol_info.filling_mode são tratados como uma máscara de bits,
+e não confundidos com os valores do enum ORDER_FILLING_*.
+Na ausência de compatibilidade explícita IOC/FOK, a prévia é recusada.
+O resultado mantém os bloqueios de sessão, custos, risco diário
+e execução. **Não chama order_send nem order_check.**
+
+**smc_agent/execution_lease.py** — reivindicação exclusiva e
+persistente de um controlador por arquivo SQLite privado. Se um
+processo encerrar abruptamente, outro não pode assumir esse controle
+por expiração de um temporizador. A liberação exige uma confirmação
+explícita de reconciliação. Esse mecanismo ainda é um componente
+independente de laboratório, não uma permissão de operação.
+
+O diário SQLite de intenções também passa a bloquear **novos IDs** após
+reinicialização quando houver eventos não reconciliados: não é
+suficiente bloquear apenas a duplicação de uma mesma operação.
+
+Os exemplos de calendário são fictícios. A suíte de testes integrada
+e os ensaios em um único clique devem passar localmente antes que
+qualquer versão seja considerada apta a participar de testes de
+execução na conta DEMO.
+
 ## Prévia de solicitações MT5 (sem transmissão)
 
 O módulo smc_agent/mt5_request_preview.py gera somente um **rascunho**
