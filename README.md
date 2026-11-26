@@ -12,6 +12,28 @@ A proof-of-concept that transforms selected Smart Money Concepts (SMC) rules int
 
 This is a compact implementation. Additional experiments with ATR-confirmed ZigZag, liquidity and volume confluences are maintained separately and still need to be reconciled.
 
+## Teste prático no Windows com MT5 / conta DEMO (v0.8 em revisão)
+
+O experimento agora tem um **monitor local** para o ouro da XMGlobal-MT5 5.
+Consulte [COMO_TESTAR_NO_WINDOWS.txt](COMO_TESTAR_NO_WINDOWS.txt).
+
+1. Abra o MetaTrader 5 da XM na conta **DEMO** e selecione GOLD.
+2. Baixe esta branch como ZIP, extraia a pasta inteira e tenha
+   Python 3.11+ disponível (o script informa como instalar).
+3. Dê dois cliques em **INICIAR_MONITOR_XM_DEMO.bat**.
+4. Confirme a instalação opcional do pacote oficial MetaTrader5 para Python
+   (somente se não estiver instalado).
+5. Veja **MONITOR_LOCAL_DEMO.html** abrir no navegador. O monitor
+   acompanha candles fechados M5 e H1, mostra o viés e eventuais propostas
+   SMC. Mantenha a janela do programa aberta; Ctrl+C encerra.
+
+O software bloqueia contas reais, servidores inesperados e dados sem
+frescor. Todos os registros ficam **apenas no PC** em monitoramento_privado,
+pasta excluída pelo Git. Não acessa histórico privado do Telegram.
+Nenhuma ordem é enviada; nenhum retorno é calculado nem prometido.
+O teste de integração com a instalação XM real do usuário **ainda não foi
+executado**; os testes automatizados usam um terminal simulado.
+
 ## Demonstration
 
 Requires Python 3.11+ and no third-party packages:
