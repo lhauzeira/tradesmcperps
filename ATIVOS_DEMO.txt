@@ -1,0 +1,11 @@
+# Liste aqui os símbolos EXATOS que aparecem no seu MT5 da XM.
+# Um ativo por linha. Descomente removendo o caractere # do inicio.
+# De 1 ate 12 instrumentos; nao exige programar.
+GOLD
+# EURUSD
+# GBPUSD
+# USDJPY
+# BTCUSD
+# US100Cash
+# US500Cash
+# Os exemplos podem nao existir no seu servidor: confirme o nome no MT5.
