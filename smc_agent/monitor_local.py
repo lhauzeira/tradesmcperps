@@ -61,6 +61,7 @@ class MonitorSnapshot:
     fibonacci: FibonacciObservation | None = None
     price_digits: int = 2
     m5_atr_price: float | None = None
+    m5_bias: str = "NÃO AVALIADO"
     warning: str = "Somente pesquisa. Não operar com esses sinais."
 
 
@@ -126,6 +127,8 @@ def capture(adapter, *, now: datetime | None = None,
 
     bias = macro_bias(h1)
     bias_text = "ALTA" if bias > 0 else "BAIXA" if bias < 0 else "NEUTRO"
+    m5_structure = macro_bias(m5)
+    m5_bias = "ALTA" if m5_structure > 0 else "BAIXA" if m5_structure < 0 else "NEUTRO"
     fib = observe_fibonacci(m5, side="buy" if bias > 0 else "sell") if bias != 0 else None
     # The MT5 symbol itself determines quote precision. No FX/crypto
     # instrument is formatted using GOLD's hard-coded 2 digits.
@@ -152,6 +155,7 @@ def capture(adapter, *, now: datetime | None = None,
         clock_offset_label=clock.offset_label,
         fibonacci=fib, price_digits=digits,
         m5_atr_price=atr_at(m5, len(m5) - 1),
+        m5_bias=m5_bias,
         warning="Horário AO VIVO reconciliado com tick, M5 e H1: "
                 "não prova fuso histórico. SMC experimental, sem ordens, "
                 "custos, sessões históricas ou validação de resultado."
