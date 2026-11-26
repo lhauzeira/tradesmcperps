@@ -60,11 +60,18 @@ class MonitorSnapshot:
     warning: str = "Somente pesquisa. Não operar com esses sinais."
 
 
-def capture(adapter, *, now: datetime, expected_server: str = EXPECTED_SERVER) -> MonitorSnapshot:
-    """Read closed candles from MT5. Does NOT call any execution endpoint."""
-    if now.tzinfo is None or now.utcoffset() is None:
-        raise ValueError("Relógio de verificação deve ter fuso horário")
-    now = now.astimezone(timezone.utc)
+def capture(adapter, *, now: datetime | None = None,
+            expected_server: str = EXPECTED_SERVER) -> MonitorSnapshot:
+    """Read closed candles; measure PC UTC AFTER the terminal tick read.
+
+    Tests may inject an explicit datetime; production takes the time when
+    the market snapshot is already available, to avoid false +seconds
+    from potentially slow MT5.initialize() and history fetches.
+    """
+    if now is not None:
+        if now.tzinfo is None or now.utcoffset() is None:
+            raise ValueError("Relógio de verificação deve ter fuso horário")
+        now = now.astimezone(timezone.utc)
     check_demo_account(adapter.mt5.account_info(), adapter.mt5,
                        expected_server=expected_server)
 
@@ -91,6 +98,8 @@ def capture(adapter, *, now: datetime, expected_server: str = EXPECTED_SERVER) -
             raise RuntimeError("Divergência entre time e time_msc do tick GOLD")
         raw_tick_time = raw_msc / 1000
 
+    if now is None:
+        now = datetime.now(timezone.utc)
     clock = reconcile_live_clock(
         now=now, raw_tick_seconds=raw_tick_time,
         raw_m5_open=m5[-1].time, raw_h1_open=h1[-1].time,
@@ -266,7 +275,7 @@ def monitor(*, symbol: str = "GOLD", interval: int = 30, once: bool = False,
                     adapter = MT5Adapter(symbol)
                     account = adapter.connect()
                     check_demo_account(account, adapter.mt5, expected_server=expected_server)
-                snap = capture(adapter, now=now, expected_server=expected_server)
+                snap = capture(adapter, expected_server=expected_server)
                 if snap.last_closed_m5_utc != last_bar:
                     last_bar = snap.last_closed_m5_utc
                     record = {
