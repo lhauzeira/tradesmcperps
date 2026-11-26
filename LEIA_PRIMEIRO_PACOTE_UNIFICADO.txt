@@ -1,0 +1,58 @@
+SMC TRADING AGENT — PACOTE UNIFICADO / RELEASE CANDIDATE RC1
+==============================================================
+
+PROJETO: um bot SMC multiativos que no FUTURO possa abrir, gerenciar
+e encerrar ordens automaticamente na conta XM DEMO, com testes de risco
+e estudo de resultados. O objetivo de lucratividade NAO esta comprovado.
+
+IMPORTANTE: ESTA CANDIDATA AINDA NAO ABRE NEM FECHA ORDENS.
+==============================================================
+
+O QUE JA FOI INTEGRADO NESTA MESMA PASTA
+- Analise SMC H1/M5 e sinais de pesquisa.
+- Fibonacci 50%, 61,8%, 70,5%, 78,6%, zona OTE experimental.
+- Monitor multiativos XM MT5, somente conta demo e sem ordens.
+- Reconciliação provisoria de relogios por tick, M5 e H1.
+- Verificacao de qualidade da cotacao, spread/ATR, precisao e contrato.
+- Diario privado de sinais SMC em SQLite / JSONL.
+- Ensaio ficticio de abertura/fechamento com Bid/Ask.
+- Calculadora ficticia de risco por instrumento, perda diaria, limite
+  de exposicao, IDs duplicados, perda de conexao e botao de parada.
+- Adaptador MFP preliminar, ainda NAO homologado para API atual.
+
+COMO FUNCIONA A EXPERIENCIA UNICA DE TESTE
+1. Mantenha o computador em Windows com Python 3.11 ja instalado.
+2. Baixe o ZIP e EXTRAIA TUDO numa pasta nova.
+3. Dê dois cliques em ABRIR_SMC_AGENT.bat.
+4. Escolha opcao 1 - VALIDAR TUDO. O programa roda automaticamente:
+   (a) todos os testes offline do projeto,
+   (b) ciclo ficticio de BUY, STOP/ALVO,
+   (c) dimensionamento de risco ficticio.
+   Se falhar, o processo interrompe o teste no primeiro erro.
+5. Nao precisa mais abrir tres testes diferentes.
+6. Quando e somente quando o pacote estiver apto a monitorar,
+   escolha opcao 2 para acompanhar a conta XMGlobal-MT5 5 DEMO.
+   Por padrao, ATIVOS_DEMO.txt habilita somente GOLD. Para usar
+   US100Cash e US500Cash, tire o # antes do nome, se existirem
+   com esses nomes no seu MT5.
+7. Escolha opcao 3 para ver o que o bot ainda NAO faz.
+8. Feche pelo menu (opcao 4). Quando houver monitor ativo,
+   encerre primeiro com Ctrl+C e confirme S se solicitado.
+
+RESTRICOES IMPORTANTES ANTES DE UM ROBÔ AUTONOMO
+- Ainda faltam verificacao de sessoes e feriados especÃ­ficos
+  por instrumento, sincronizacao persistente de ordens e posicoes,
+  calculo de margem e volume baseado em dados confirmados da XM,
+  protecao por perda real da conta e politica de encerramento.
+- Faltam testes de abertura/fechamento real em conta DEMO, falhas
+  de execucao, volume parcial, rejeicoes, spread fora do limite,
+  quedas de conexao, duplicidade apos reinicio e reconciliacao.
+- Sinais SMC e confluencias Fibonacci precisam de validacao fora
+  da amostra e teste prospectivo com custos realistas.
+- NENHUMA conta real e permitida pelo monitor atual.
+- NAO compartilhe numero de conta, chave, token ou senha no GitHub/chat.
+
+Esta e uma VERSAO DE INTEGRACAO E TESTES, nao um robô definitivo
+e nem uma estrategia de lucratividade comprovada. Somente depois
+das protecoes, testes e autorizacao explicita discutiremos
+habilitar ordens na XM demo. MFP sera integrada separadamente.
