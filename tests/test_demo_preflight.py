@@ -103,7 +103,7 @@ class BrokerNativeDemoPreflightTests(unittest.TestCase):
             quote_time_utc="2026-11-26T17:29:58+00:00",
             generated_utc="2026-11-26T17:29:59+00:00",
             clock_offset_label="UTC+02:00 (observado agora, provisório)",
-            quote_bid=100,quote_ask=100.2
+            quote_bid=100,quote_ask=100.2,m5_atr_price=4.0
         )
         mt5=FakeMT5()
         report=estimate_demo_order(mt5,intent(),now=NOW,market_evidence=proof)
@@ -111,6 +111,30 @@ class BrokerNativeDemoPreflightTests(unittest.TestCase):
         self.assertNotIn("COTACAO_OU_ANALISE_DESATUALIZADA",report.blockers)
         self.assertNotIn("PRECO_MUDOU_DESDE_ANALISE",report.blockers)
         self.assertFalse(report.can_submit_orders)
+
+    def test_wide_spread_relative_to_asset_atr_is_blocked(self):
+        proof=SimpleNamespace(
+            symbol="GOLD",connected_to_demo=True,
+            quote_time_utc="2026-11-26T17:29:58+00:00",
+            generated_utc="2026-11-26T17:29:59+00:00",
+            clock_offset_label="UTC+02:00 (observado agora, provisório)",
+            quote_bid=100,quote_ask=100.2,m5_atr_price=0.2
+        )
+        report=estimate_demo_order(FakeMT5(),intent(),now=NOW,
+                                   market_evidence=proof)
+        self.assertIn("SPREAD_ELEVADO_RELATIVO_ATR",report.blockers)
+
+    def test_missing_atr_does_not_mean_good_liquidity(self):
+        proof=SimpleNamespace(
+            symbol="GOLD",connected_to_demo=True,
+            quote_time_utc="2026-11-26T17:29:58+00:00",
+            generated_utc="2026-11-26T17:29:59+00:00",
+            clock_offset_label="UTC+02:00 (observado agora, provisório)",
+            quote_bid=100,quote_ask=100.2
+        )
+        report=estimate_demo_order(FakeMT5(),intent(),now=NOW,
+                                   market_evidence=proof)
+        self.assertIn("ATR_M5_NAO_CONFIRMADO",report.blockers)
 
     def test_old_evidence_blocks_even_when_broker_quote_looks_fine(self):
         proof=SimpleNamespace(
