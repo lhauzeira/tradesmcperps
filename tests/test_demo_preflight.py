@@ -91,10 +91,81 @@ class BrokerNativeDemoPreflightTests(unittest.TestCase):
         self.assertEqual(report.blockers,(
             "SESSOES_FERIADOS_NAO_VERIFICADOS",
             "EXECUCAO_DE_ORDENS_DESABILITADA",
+            "COTACAO_RECENTE_NAO_CONCILIADA",
         ))
         self.assertFalse(report.can_submit_orders)
         self.assertNotIn("order_send",mt5.calls)
         self.assertNotIn("order_check",mt5.calls)
+
+    def test_recent_reconciled_clock_and_stable_quote_proof(self):
+        proof=SimpleNamespace(
+            symbol="GOLD",connected_to_demo=True,
+            quote_time_utc="2026-11-26T17:29:58+00:00",
+            generated_utc="2026-11-26T17:29:59+00:00",
+            clock_offset_label="UTC+02:00 (observado agora, provisório)",
+            quote_bid=100,quote_ask=100.2
+        )
+        mt5=FakeMT5()
+        report=estimate_demo_order(mt5,intent(),now=NOW,market_evidence=proof)
+        self.assertNotIn("COTACAO_RECENTE_NAO_CONCILIADA",report.blockers)
+        self.assertNotIn("COTACAO_OU_ANALISE_DESATUALIZADA",report.blockers)
+        self.assertNotIn("PRECO_MUDOU_DESDE_ANALISE",report.blockers)
+        self.assertFalse(report.can_submit_orders)
+
+    def test_old_evidence_blocks_even_when_broker_quote_looks_fine(self):
+        proof=SimpleNamespace(
+            symbol="GOLD",connected_to_demo=True,
+            quote_time_utc="2026-11-26T17:28:00+00:00",
+            generated_utc="2026-11-26T17:28:01+00:00",
+            clock_offset_label="UTC+02:00 (observado agora, provisório)",
+            quote_bid=100,quote_ask=100.2
+        )
+        report=estimate_demo_order(
+            FakeMT5(),intent(),now=NOW,market_evidence=proof
+        )
+        self.assertIn("COTACAO_OU_ANALISE_DESATUALIZADA",report.blockers)
+
+    def test_price_moved_since_evidence_blocks(self):
+        proof=SimpleNamespace(
+            symbol="GOLD",connected_to_demo=True,
+            quote_time_utc="2026-11-26T17:29:58+00:00",
+            generated_utc="2026-11-26T17:29:59+00:00",
+            clock_offset_label="UTC+02:00 (observado agora, provisório)",
+            quote_bid=99,quote_ask=99.2
+        )
+        report=estimate_demo_order(
+            FakeMT5(),intent(),now=NOW,market_evidence=proof
+        )
+        self.assertIn("PRECO_MUDOU_DESDE_ANALISE",report.blockers)
+
+    def test_evidence_wrong_symbol_or_real_account_flag_is_rejected(self):
+        for field,value in (("symbol","US100Cash"),
+                            ("connected_to_demo",False)):
+            proof=SimpleNamespace(
+                symbol="GOLD",connected_to_demo=True,
+                quote_time_utc="2026-11-26T17:29:58+00:00",
+                generated_utc="2026-11-26T17:29:59+00:00",
+                clock_offset_label="UTC+02:00 (observado agora, provisório)",
+                quote_bid=100,quote_ask=100.2
+            )
+            setattr(proof,field,value)
+            report=estimate_demo_order(
+                FakeMT5(),intent(),now=NOW,market_evidence=proof
+            )
+            self.assertIn("EVIDENCIA_ATIVO_OU_CONTA_INCOERENTE",report.blockers)
+
+    def test_naive_market_clock_is_never_accepted(self):
+        proof=SimpleNamespace(
+            symbol="GOLD",connected_to_demo=True,
+            quote_time_utc="2026-11-26T17:29:58",
+            generated_utc="2026-11-26T17:29:59+00:00",
+            clock_offset_label="UTC+02:00 (observado agora, provisório)",
+            quote_bid=100,quote_ask=100.2
+        )
+        report=estimate_demo_order(
+            FakeMT5(),intent(),now=NOW,market_evidence=proof
+        )
+        self.assertIn("HORARIOS_DA_EVIDENCIA_INVALIDOS",report.blockers)
 
     def test_real_account_refused_before_any_symbol_or_position_read(self):
         mt5=FakeMT5()
