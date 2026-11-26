@@ -95,7 +95,7 @@ class MonitorTests(unittest.TestCase):
                 for x in original_bars(timeframe, count)]
         fake.bars = future_bars
         with patch("smc_agent.monitor_local.analyze") as analyze:
-            with self.assertRaisesRegex(RuntimeError, "VERIFICAR_HORARIO_XM_DEMO"):
+            with self.assertRaisesRegex(RuntimeError, "Candle M5"):
                 capture(fake, now=NOW)
         analyze.assert_not_called()
 
@@ -107,16 +107,74 @@ class MonitorTests(unittest.TestCase):
             tick.time += 3*3600
             return tick
         fake.mt5.symbol_info_tick = future_tick
-        with self.assertRaisesRegex(RuntimeError, "Tick GOLD"):
+        with self.assertRaisesRegex(RuntimeError, "Candle M5"):
             capture(fake, now=NOW)
 
     def test_old_m5_candle_never_reemitted_as_active_signal(self):
         old = NOW+timedelta(minutes=25)
+        fake = FakeAdapter()
+        # Even when an old tick's raw time has no +2h discrepancy,
+        # it is never enough to authorize a new research signal.
         with patch("smc_agent.monitor_local.analyze") as spy:
-            result = capture(FakeAdapter(), now=old)
-        self.assertEqual(result.state, "DADOS ANTIGOS — SEM SINAL ATIVO")
-        self.assertIsNone(result.record)
+            with self.assertRaisesRegex(RuntimeError, "tick GOLD antigo"):
+                capture(fake, now=old)
         spy.assert_not_called()
+
+    def test_user_plus_two_hours_raw_tick_and_bars_enable_research_monitor(self):
+        # Reproduce screenshot pattern: both raw candles and the tick are
+        # about 2h in front. Offset is observed, not hard-coded in capture.
+        fake = FakeAdapter()
+        orig_bars = fake.bars
+        def future_bars(frame, count):
+            return [
+                Candle(x.time+timedelta(hours=2), x.open, x.high,
+                       x.low, x.close, x.tick_volume)
+                for x in orig_bars(frame, count)
+            ]
+        fake.bars = future_bars
+        orig_tick = fake.mt5.symbol_info_tick
+        def future_tick(symbol):
+            out = orig_tick(symbol)
+            out.time += 7200
+            return out
+        fake.mt5.symbol_info_tick = future_tick
+        with patch("smc_agent.monitor_local.analyze", return_value=None) as analyze:
+            report = capture(fake, now=NOW)
+        analyze.assert_called_once()
+        self.assertEqual(report.state, "AGUARDANDO SETUP SMC")
+        self.assertEqual(report.last_closed_m5_utc,
+                         "2026-11-25T14:00:00+00:00")
+        self.assertEqual(report.last_closed_h1_utc,
+                         "2026-11-25T14:00:00+00:00")
+        self.assertIn("UTC+02:00", report.clock_offset_label)
+        self.assertEqual(report.quote_time_utc, NOW.isoformat().replace(".000000", ""))
+        self.assertIn("provisório", render_html(report))
+        self.assertTrue(report.connected_to_demo)
+
+    def test_user_plus_two_hours_produces_correct_research_event_timestamp(self):
+        fake = FakeAdapter()
+        old_bars = fake.bars
+        fake.bars = lambda tf, count: [
+            Candle(x.time+timedelta(hours=2), x.open, x.high,
+                   x.low, x.close, x.tick_volume)
+            for x in old_bars(tf, count)
+        ]
+        old_tick = fake.mt5.symbol_info_tick
+        def shifted_tick(symbol):
+            x = old_tick(symbol)
+            x.time += 7200
+            return x
+        fake.mt5.symbol_info_tick = shifted_tick
+        ob = OrderBlock("buy", 3998, 4000, 15, 20)
+        theoretical = Signal("buy", 4000, 3998, 4005, 2.5,
+                             ob, "BOS + OB experimental")
+        with patch("smc_agent.monitor_local.analyze", return_value=theoretical):
+            snap = capture(fake, now=NOW)
+        self.assertEqual(
+            snap.record.candle_closed_at.isoformat(),
+            "2026-11-25T14:00:00+00:00")
+        self.assertIn("v10", snap.record.source)
+        self.assertIn("UTC+02:00", snap.clock_offset_label)
 
     def test_mock_smc_signal_is_labeled_not_operable(self):
         ob = OrderBlock("buy", 3998, 4000, 15, 20)
