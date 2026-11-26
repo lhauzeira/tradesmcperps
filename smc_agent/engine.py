@@ -126,8 +126,14 @@ def order_blocks(candles: list[Candle], wing: int = 2, min_body_atr: float = .85
     return result
 
 
-def analyze(macro: list[Candle], entry: list[Candle], rr: float = 2.5) -> Signal | None:
-    """Identifica oportunidade; última vela de cada série deve estar FECHADA."""
+def analyze(macro: list[Candle], entry: list[Candle], rr: float = 2.5, *,
+            require_fibonacci: bool = False) -> Signal | None:
+    """Experimental SMC with OPTIONAL, not yet performance-tested Fibonacci.
+
+    require_fibonacci=False preserves the previous GOLD SMC behavior.
+    The filter, when requested, requires a confirmed directional swing,
+    a recent OTE retest and overlap with the detected Order Block.
+    """
     _chronological(macro)
     _chronological(entry)
     if not 2 <= rr <= 3 or len(macro) < 40 or len(entry) < 50:
@@ -136,6 +142,13 @@ def analyze(macro: list[Candle], entry: list[Candle], rr: float = 2.5) -> Signal
     if bias == 0:
         return None
     side = "buy" if bias > 0 else "sell"
+    fibonacci = None
+    if require_fibonacci:
+        # Lazy import: fibonacci uses confirmed_pivots in this module.
+        from .fibonacci import observe_fibonacci
+        fibonacci = observe_fibonacci(entry, side=side)
+        if fibonacci is None or not fibonacci.recent_ote_retest:
+            return None
     i = len(entry)-1
     candle = entry[i]
     a = atr_at(entry, i)
@@ -164,6 +177,8 @@ def analyze(macro: list[Candle], entry: list[Candle], rr: float = 2.5) -> Signal
             stop = z.high + .1 * a
         if not touched:
             continue
+        if fibonacci is not None and not fibonacci.ob_overlaps_ote(z.low, z.high):
+            continue
         price = candle.close
         distance = abs(price-stop)
         if (side == "buy" and stop >= price) or (side == "sell" and stop <= price):
@@ -173,5 +188,8 @@ def analyze(macro: list[Candle], entry: list[Candle], rr: float = 2.5) -> Signal
         target = price + rr * distance if side == "buy" else price - rr * distance
         if target <= 0:
             continue
-        return Signal(side, price, stop, target, rr, z, "BOS + OB com pavios + mitigação 50% + fechamento confirmado")
+        reason = "BOS + OB com pavios + mitigação 50% + fechamento confirmado"
+        if fibonacci is not None:
+            reason += " + Fibonacci 61,8–78,6% (filtro experimental)"
+        return Signal(side, price, stop, target, rr, z, reason)
     return None
