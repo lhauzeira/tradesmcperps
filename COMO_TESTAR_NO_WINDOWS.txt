@@ -1,0 +1,76 @@
+GUIA PRÁTICO — SMC TRADING AGENT NO META TRADER 5 DA XM
+Versão 0.8 EXPERIMENTAL • Apenas conta DEMO • Nenhuma ordem é enviada
+
+O QUE VOCÊ VAI VER?
+Uma página local, aberta no navegador, que acompanha o GOLD da sua conta DEMO
+da XM. A página mostra Bid, Ask, viés H1, último candle M5 fechado e, se
+a metodologia SMC detectar alguma oportunidade, uma prévia de sinal.
+Não é recomendação de negociação; a estratégia ainda não foi validada.
+
+PASSO 1 — PREPARAR O COMPUTADOR (WINDOWS)
+• Tenha o MetaTrader 5 da XM aberto e conectado à conta DEMO.
+• Confirme que o servidor é "XMGlobal-MT5 5" e que GOLD aparece na plataforma.
+• Instale o Python 3.11 ou superior, se ainda não tiver.
+  Site oficial: https://www.python.org/downloads/windows/
+  Marque a opção de adicionar Python ao PATH durante a instalação.
+• NÃO compartilhe número da conta, senhas ou tokens.
+
+PASSO 2 — EXTRAIR O PROJETO COMPLETO
+• Abra o GitHub na branch feature/mt5-demo-monitor-v08.
+• Baixe o ZIP desta branch e use "Extrair tudo" do Windows.
+• Não execute diretamente de dentro do arquivo ZIP.
+
+PASSO 3 — INICIAR
+• Dentro da pasta extraída, dê dois cliques em:
+    INICIAR_MONITOR_XM_DEMO.bat
+• Se o Windows perguntar sobre a execução de um arquivo .bat,
+  confirme a origem e o conteúdo do arquivo antes de prosseguir.
+  Não são necessários privilégios de administrador.
+• Se o conector MetaTrader5 ainda não estiver instalado, o programa
+  perguntará se você deseja instalá-lo com pip, através do Python.
+  Requer acesso à Internet na primeira instalação.
+• Uma página chamada MONITOR_LOCAL_DEMO.html será aberta no navegador.
+• Deixe a janela preta do monitor aberta enquanto quiser acompanhar.
+  A página atualiza sozinha a cada 30 segundos.
+
+PASSO 4 — INTERPRETAR
+"AGUARDANDO SETUP SMC":
+  a metodologia experimental não identificou um sinal novo neste candle.
+"SINAL DE PESQUISA — NÃO OPERAR":
+  apenas uma proposta de entrada, stop e alvo calculada pela estratégia.
+"DADOS ANTIGOS — SEM SINAL ATIVO":
+  o MT5 não trouxe candle M5 recente; possivelmente o mercado está fechado.
+"MONITOR PAUSADO — VERIFICAR MT5":
+  conta real/servidor diferente, terminal não conectado, erro de histórico,
+  ou pacote MetaTrader5 indisponível.
+
+O QUE FICA SALVO?
+Na pasta "monitoramento_privado":
+• analises_m5.jsonl: uma linha de pesquisa por novo candle M5.
+• sinais.jsonl: propostas SMC emitidas sem duplicatas.
+• sinais.sqlite3: registro local para deduplicar entre reinicializações.
+Tudo fica no seu computador. O código não publica esses arquivos no GitHub.
+Pode apagar esses arquivos se quiser reiniciar o monitoramento.
+
+SEGURANÇA
+• O programa lê candles e preços de conta DEMO.
+• Ele interrompe a coleta se a conta não for DEMO ou o servidor mudar.
+• Ele NÃO envia ordens: nem compra, nem venda, nem fecha posições.
+• Ele NÃO envia sinais ao Telegram.
+• Ele não envia suas credenciais e não tem servidor web público.
+• Deixar a janela fechada encerra o acompanhamento; não roda 24 horas
+  sozinho e não opera em um VPS.
+
+O QUE ESTE TESTE AINDA NÃO PROVA?
+• Nenhuma taxa de acerto, lucratividade, consistência ou execução real.
+• A ausência de sinais não é falha: a regra SMC é restritiva.
+• A corretora pode ter dados faltantes, atraso ou sessões fechadas.
+• A avaliação de risco, spread e custos de entradas ainda exige uma
+  etapa separada antes de automatizar qualquer execução.
+• O funcionamento integrado com um terminal XM real deve ser confirmado
+  no seu computador; os testes automáticos atuais usam terminal simulado.
+
+COMO ENCERRAR
+Na janela preta, pressione Ctrl+C e confirme o encerramento, se solicitado.
+
+NÃO SOLICITAMOS NÚMERO DE CONTA, SENHA, CHAVE DE API OU ACESSO REMOTO.
