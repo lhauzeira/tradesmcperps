@@ -1,3 +1,39 @@
+v0.13 — PREPARACAO PARA ORDENS DEMO, AINDA SEM ABRIR ORDENS
+
+Estamos construindo o portao de seguranca para uma etapa futura:
+- Verifica idade do tick, Bid/Ask, spread / ATR M5 e dados de contrato.
+- Detecta preco antigo e spread possivelmente fora do padrao.
+- Mostra sempre que a sessao e o calendario de feriados ainda
+  NAO foram confirmados pela corretora, antes de uma ordem.
+- Mostra os motivos de bloqueio no painel de cada instrumento.
+- NAO envia ordens ao MT5, mesmo em conta DEMO.
+- NAO le saldo nem numero de conta e nao publica nada na Internet.
+
+1. Feche o monitor antigo no terminal com Ctrl+C.
+2. Baixe o ZIP da branch feature/mt5-pretrade-readiness-v13 e Extraia Tudo.
+3. Abra ATIVOS_DEMO.txt na pasta NOVA e coloque os simbolos EXATOS
+   do terminal XM DEMO; por exemplo:
+   GOLD
+   US100Cash
+   US500Cash
+4. Execute TESTAR_CODIGO_OFFLINE.bat.
+5. Se aparecer "OK", inicie INICIAR_MONITOR_MULTIATIVOS_DEMO.bat.
+6. No painel PAINEL_MULTI_DEMO.html, cada ativo tera um resumo
+   "Portao de execucao" com motivos e "Spread / ATR M5".
+   "BLOQUEADO_PARA_EXECUCAO" e NORMAL na versao 0.13:
+   feriados e sessoes ainda nao foram verificados automaticamente.
+   Isso NAO impede a leitura dos sinais SMC experimentais.
+7. Para demonstrar um CICLO TOTALMENTE INVENTADO de compra e
+   encerramento com dados falsos, execute SIMULAR_CICLO_PAPER_OFFLINE.bat.
+   Esse ensaio NAO abre o MetaTrader5, nao solicita conta e nao
+   demonstra lucro real. O resultado e em UNIDADES DE PRECO, nao USD.
+
+Se o teste offline falhar, envie a mensagem de erro, SEM credenciais.
+O monitor GOLD antigo continua preservado no projeto.
+Nao misture arquivos de versoes diferentes. Nao rode os dois monitores
+ao mesmo tempo. Se o mercado fechar, a avaliacao de cada instrumento
+pode ficar indisponivel ou indicar dados antigos; nao force uma entrada.
+
 NOVO (v0.12) — ANALISE DE VARIOS ATIVOS COM FIBONACCI
 
 Se quiser manter apenas GOLD, continue com seu monitor antigo normalmente.
