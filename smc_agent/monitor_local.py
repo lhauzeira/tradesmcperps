@@ -74,7 +74,20 @@ def capture(adapter, *, now: datetime, expected_server: str = EXPECTED_SERVER) -
     h1_close = h1[-1].time + timedelta(seconds=3600)
     age = (now - m5_close.astimezone(timezone.utc)).total_seconds()
     if age < -90:
-        raise RuntimeError("Horário do candle parece estar no futuro. Verifique o relógio.")
+        # Do not silently subtract a presumed GMT+2/GMT+3. Some MT5 brokers
+        # report server-clock-like timestamps despite documented UTC semantics.
+        # Require read-only diagnosis before enabling new research signals.
+        raise RuntimeError(
+            "Candle M5 está cerca de "
+            f"{(-age / 3600):.2f} h à frente do UTC do PC. "
+            "Execute VERIFICAR_HORARIO_XM_DEMO.bat. "
+            "NÃO altere o relógio do Windows."
+        )
+    if (h1_close - now).total_seconds() > 90:
+        raise RuntimeError(
+            "Candle H1 também aparece no futuro. "
+            "Execute VERIFICAR_HORARIO_XM_DEMO.bat, sem forçar fusos."
+        )
     if age > MAX_AGE_SECONDS:
         state = "DADOS ANTIGOS — SEM SINAL ATIVO"
         signal = None
@@ -99,7 +112,13 @@ def capture(adapter, *, now: datetime, expected_server: str = EXPECTED_SERVER) -
                 bid, ask = float(b), float(a)
             timestamp = getattr(tick, "time", None)
             if isinstance(timestamp, (int, float)) and timestamp > 0:
-                tick_at = datetime.fromtimestamp(timestamp, timezone.utc).isoformat()
+                tick_time = datetime.fromtimestamp(timestamp, timezone.utc)
+                if (tick_time - now).total_seconds() > 90:
+                    raise RuntimeError(
+                        "Tick GOLD também aparece à frente do UTC do PC. "
+                        "Execute VERIFICAR_HORARIO_XM_DEMO.bat."
+                    )
+                tick_at = tick_time.isoformat()
 
     return MonitorSnapshot(
         generated_utc=now.isoformat(), symbol=adapter.symbol,
