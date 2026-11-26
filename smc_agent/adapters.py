@@ -19,7 +19,7 @@ class MT5Adapter:
     """Depende do pacote MetaTrader5 e do terminal MT5 local logado."""
     _TIMEFRAMES = {
         "M1": "TIMEFRAME_M1", "M2": "TIMEFRAME_M2", "M5": "TIMEFRAME_M5",
-        "M15": "TIMEFRAME_M15", "H1": "TIMEFRAME_H1",
+        "M15": "TIMEFRAME_M15", "M30": "TIMEFRAME_M30", "H1": "TIMEFRAME_H1",
         "H4": "TIMEFRAME_H4", "D1": "TIMEFRAME_D1"
     }
 
