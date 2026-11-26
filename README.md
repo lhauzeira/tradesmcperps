@@ -1,5 +1,30 @@
 # SMC Trading Agent — Builders Prototype
 
+## Release candidate integrada RC1 — um único iniciador
+
+A pedido do usuário, as ferramentas existentes foram **consolidadas**
+em um fluxo único no Windows: ABRIR_SMC_AGENT.bat.
+
+- Opção 1 — VALIDA TUDO: roda os testes offline, exemplo fictício de
+  abertura/fechamento Bid/Ask e cálculo fictício de risco.
+- Opção 2 — Abre o monitor multiativos XM DEMO, somente leitura,
+  com SMC, Fibonacci, verificação de cotação e diário de sinais.
+- Opção 3 — Exibe o status e lista o que **ainda não foi implementado**.
+- Opção 4 — Sair.
+
+Para detalhes, leia LEIA_PRIMEIRO_PACOTE_UNIFICADO.txt.
+
+**RC1 NÃO É O ROBÔ AUTÔNOMO DEFINITIVO**: o programa não abre/fecha
+ordens, não está conectado à API validada MFP, nem tem lucro comprovado.
+As ordens XM DEMO só serão consideradas após verificações independentes
+de calendário/sessões, contrato, posições, margem, limites reais, falhas
+de rede, reconciliação, testes completos e autorização explícita.
+
+Esta RC1 ainda não passou por uma validação local de ponta a ponta.
+O objetivo é evitar que o usuário tenha de baixar e executar cada
+experimento separadamente.
+
+
 **Status:** experimental, deterministic trading-research prototype. **No real or simulated brokerage orders are sent.** No returns or pass rates are claimed.
 
 A proof-of-concept that transforms selected Smart Money Concepts (SMC) rules into reproducible Python analysis:
