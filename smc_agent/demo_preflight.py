@@ -228,8 +228,12 @@ def estimate_demo_order(
         base.update(kwargs)
         return BrokerPreflightReport(**base)
 
-    blockers: list[str] = ["SESSOES_FERIADOS_NAO_VERIFICADOS",
-                            "EXECUCAO_DE_ORDENS_DESABILITADA"]
+    blockers: list[str] = [
+        "SESSOES_FERIADOS_NAO_VERIFICADOS",
+        "CUSTOS_REAIS_E_SLIPPAGE_NAO_VERIFICADOS",
+        "PERDA_DIARIA_REAL_NAO_RECONCILIADA",
+        "EXECUCAO_DE_ORDENS_DESABILITADA",
+    ]
     currency = getattr(account, "currency", None)
     if type(currency) is not str or len(currency) != 3 or not currency.isupper():
         blockers.append("MOEDA_DA_CONTA_NAO_CONFIRMADA")
