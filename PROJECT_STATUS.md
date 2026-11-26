@@ -23,6 +23,10 @@ não uma versão lucrativa comprovada e NÃO um executor de ordens.
 | Ensaio integrado | Corretora falsa + cálculo de risco + timeout + recuperação de estado, sem MetaTrader5 |
 | Paper autônomo integrado | Sinal fictício → orçamento → abertura Bid/Ask → alvo/stop/gap → diário SQLite; sem MT5 |
 | Prévia de pedidos MT5 | Rascunho de abertura e fechamento com SL/TP, lado do spread e ticket; sem order_send |
+| Calendário broker UTC | Módulo explícito de janelas por ativo e data; apenas dados fictícios, sem confirmar horários XM reais |
+| Prévia integrada SMC → contrato | Testa a montagem do pedido de abertura e filling IOC/FOK, sem enviar |
+| Controlador exclusivo | Lock SQLite durável e conservador após crash; integração ao executor futuro pendente |
+| Reinício com exposição desconhecida | Bloqueia qualquer NOVO ID de sinal enquanto persistir reconciliação pendente |
 | SMC → preflight corretora | Sinal M5 recente examinado pelo risco/margem do lote mínimo na conta DEMO, leitura apenas |
 | Diário | JSONL e SQLite local para sinais; não representam operações reais |
 | MFP | Adaptador sandbox experimental; contrato ainda não homologado |
@@ -36,6 +40,9 @@ não uma versão lucrativa comprovada e NÃO um executor de ordens.
   cinco períodos, classificação de confluência, pré-execução nativa
   simulada, persistência, diagnóstico sanitizado e tratamento de
   respostas fictícias de corretora.
+- Testes novos cobrem calendário/feriados UTC, modo filling IOC/FOK,
+  retomada após reinício, controle exclusivo de processo e
+  preparação de solicitações DEMO sem transmissão.
 - **Não** se deve afirmar que esses testes novos passaram: a validação
   integrada ainda está pendente. GitHub Actions tem apresentado
   falha de inicialização antes de executar os trabalhos; o último
