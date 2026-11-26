@@ -9,8 +9,8 @@ A partir desta candidata integrada, o monitor XM DEMO exibe a
 - H1 — viés principal da estratégia SMC já existente.
 - M30 — estrutura intermediária.
 - M15 — estrutura intermediária mais curta.
-- M5 — estrutura de execução já existente; continua sendo
-  analisada por candles totalmente fechados.
+- M5 — estrutura do gatilho teórico já existente; continua sendo
+  analisada por candles totalmente fechados, sem execução de ordens.
 
 O novo módulo smc_agent/multi_timeframe.py coleta H4, M30 e M15
 diretamente da API MT5 em modo leitura, via copy_rates_from_pos
@@ -29,6 +29,11 @@ pressupomos o mesmo fuso em dados históricos antigos.
 Uma ausência de dados, candle ainda aberto, horário
 divergente ou histórico insuficiente é marcada como
 INDISPONIVEL, jamais tratada como NEUTRO.
+
+Os sinais de pesquisa recebem também um rótulo de confluência
+observada, que distingue cinco períodos alinhados, alinhamento
+parcial, H4 contrário e cobertura insuficiente. Esses rótulos
+são gravados no diário privado para futuras comparações.
 
 **Não foi comprovado que exigir alinhamento entre os cinco
 períodos melhore a expectativa da estratégia.** Por isso,
