@@ -25,8 +25,16 @@ if errorlevel 1 goto TEST
 goto END
 :TEST
 echo.
-py -3.11 -m smc_agent.unified --validar-tudo
-if errorlevel 1 goto FAILED
+echo Rodando TODOS os testes e ensaios offline. Aguarde...
+if not exist "monitoramento_privado" mkdir "monitoramento_privado"
+set "TEST_LOG=%CD%\monitoramento_privado\resultado_testes_unificados.txt"
+py -3.11 -m smc_agent.unified --validar-tudo > "%TEST_LOG%" 2>&1
+set "TEST_EXIT=%ERRORLEVEL%"
+type "%TEST_LOG%"
+echo.
+echo Resultado salvo SOMENTE neste computador:
+echo "%TEST_LOG%"
+if not "%TEST_EXIT%"=="0" goto FAILED
 echo.
 echo Para iniciar o monitor, volte ao menu e escolha opcao 2.
 pause
