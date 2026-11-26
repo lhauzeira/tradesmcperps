@@ -123,8 +123,17 @@ class SessionCalendar:
 
         today = self._by_day.get((symbol, day))
         previous = self._by_day.get((symbol, day-timedelta(days=1)))
-        # Overnight windows may extend into today's UTC date, but must
-        # be explicitly enumerated and covered in yesterday's schedule.
+        # A prior day's overnight session cannot bypass an unknown day,
+        # today's special closure or today's expired verified schedule.
+        if today is None:
+            return report("DATA_SEM_COBERTURA")
+        if not _utc(today.confirmed_at,"confirmed_at") <= moment < _utc(
+                today.expires_at,"expires_at"):
+            return report("EVIDENCIA_DE_SESSAO_EXPIRADA_OU_FUTURA")
+        if today.status == "CLOSED":
+            return report("FECHAMENTO_PROGRAMADO",today.source_reference)
+        # Overnight windows may extend into today's UTC date, but both
+        # UTC dates must be covered and today must not be CLOSED.
         applicable = []
         for row in (previous, today):
             if row is None:
@@ -140,13 +149,6 @@ class SessionCalendar:
             return report(
                 "JANELA_PROGRAMADA_NAO_AUTORIZADA", row.source_reference, True
             )
-        if today is None:
-            return report("DATA_SEM_COBERTURA")
-        if not _utc(today.confirmed_at,"confirmed_at") <= moment < _utc(
-                today.expires_at,"expires_at"):
-            return report("EVIDENCIA_DE_SESSAO_EXPIRADA_OU_FUTURA")
-        if today.status == "CLOSED":
-            return report("FECHAMENTO_PROGRAMADO",today.source_reference)
         return report("FORA_DA_JANELA_PROGRAMADA",today.source_reference)
 
 
