@@ -1,5 +1,43 @@
 # SMC Trading Agent — Builders Prototype
 
+## Núcleo de autonomia em laboratório (100% FICTÍCIO)
+
+**smc_agent/paper_orchestrator.py** liga, em uma mesma sequência:
+
+1. Cálculo de risco hipotético, com tick size/value e orçamento
+   fictícios, incluindo reservas de posições paper já abertas;
+2. Reserva do ID de sinal em diário SQLite antes da abertura simulada;
+3. Abertura hipotética por Ask (BUY) ou Bid (SELL);
+4. Atualização de cotações fictícias, respeitando o lado oposto
+   do spread para a saída;
+5. Encerramento hipotético por alvo, stop, ou resultado INCONCLUSIVO
+   se o intervalo entre ticks não permitir observar a trajetória;
+6. Registro terminal no SQLite, sem converter essas observações
+   em ordens da corretora ou P&L em moeda da conta;
+7. Quarentena de qualquer posição fictícia ainda aberta após
+   reinicialização, em vez de emitir novamente uma ordem.
+
+A opção **1 — VALIDAR TUDO** do iniciador único inclui agora
+esse ciclo autônomo inteiramente inventado, além dos ensaios de risco,
+ordens fictícias e recuperação. Mesmo que o ensaio exiba uma diferença
+positiva de preço, ela foi fabricada e não constitui lucro.
+
+**smc_agent/demo_signal_probe.py** liga um sinal de pesquisa SMC M5
+recente ao pré-exame XM DEMO, somente leitura. Havendo sinal,
+verifica idade e deslocamento do preço, consulta o lote mínimo
+de cada instrumento, confere limites de stop e alvo e calcula perda
+teórica e margem pelo próprio MT5. O monitor mostra os bloqueios
+de execução e anota o resultado em diários privados, sem enviar
+ordens. Caso a conta mude para REAL durante a pesquisa, todo o
+registro da leitura é invalidado.
+
+**Limites:** o ciclo autônomo ainda usa preços e capital totalmente
+inventados. O monitor real NÃO chama esse simulador para inferir
+resultados; seus intervalos de captura de 30 segundos não garantem
+a ordem dos preços entre dois ticks. Antes de medir lucratividade,
+precisamos de um fluxo completo de dados e auditoria dos resultados
+futuros. A abertura/fechamento de ordens DEMO segue desabilitada.
+
 ## Preparação de execução XM DEMO — sem ordens
 
 Para preparar a futura automação, incluímos dois componentes novos na
