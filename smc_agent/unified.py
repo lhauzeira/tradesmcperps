@@ -29,6 +29,7 @@ def validate_all(*, root: Path | None = None) -> int:
         ("ORCAMENTO FICTICIO DE RISCO", [sys.executable, "-m", "smc_agent.multi_risk"]),
         ("PREFLIGHT E REINICIO SIMULADOS", [sys.executable, "-m", "smc_agent.dry_run_pipeline"]),
         ("CICLO PAPER AUTONOMO FICTICIO", [sys.executable, "-m", "smc_agent.paper_orchestrator"]),
+        ("PREVIA FICTICIA DE ABERTURA E FECHAMENTO MT5", [sys.executable, "-m", "smc_agent.mt5_request_preview"]),
     )
     for label, argv in commands:
         print(f"\n--- {label} ---", flush=True)
@@ -37,7 +38,7 @@ def validate_all(*, root: Path | None = None) -> int:
             print(f"\nFALHOU: {label}. Nenhum monitor foi iniciado.", flush=True)
             return result.returncode
     print("\n" + "=" * 67, flush=True)
-    print("VALIDACAO OFFLINE CONCLUIDA: TESTES E QUATRO ENSAIOS FICTICIOS OK.", flush=True)
+    print("VALIDACAO OFFLINE CONCLUIDA: TESTES E CINCO ENSAIOS FICTICIOS OK.", flush=True)
     print("Isso NAO comprova lucro, execucao na corretora ou sistema final.", flush=True)
     print("Nenhuma ordem enviada.", flush=True)
     return 0
@@ -73,6 +74,7 @@ def main(argv: list[str] | None = None) -> int:
             "Preflight EXIGE evidencias recentes de preco, sessao continua bloqueada\n"
             "Intencoes em SQLite: deduplicacao e quarentena apos reinicio\n"
             "Orquestrador paper: risco, abertura, saida, reinicio (apenas dados ficticios)\n"
+            "Blueprint MT5 de abertura e fechamento: PREVIA SEM ENVIO\n"
             "Ciclo paper e orcamento de risco: dados ficticios\n"
             "MFP: adaptador preliminar nao homologado\n"
             "Enviar/fechar ordens: NAO IMPLEMENTADO NESTA CANDIDATA\n"
