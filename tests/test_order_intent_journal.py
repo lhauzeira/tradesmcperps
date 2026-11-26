@@ -68,6 +68,55 @@ class DurableIntentJournalTests(unittest.TestCase):
                 )
                 self.assertEqual(again.counts(),{"RECONCILE_REQUIRED":1})
 
+    def test_restart_blocks_new_signal_until_quarantine_and_reconciliation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/"intents.sqlite3"
+            with ResearchIntentJournal(path) as first:
+                first.register(intent(),at=NOW)
+                first.transition(
+                    "synthetic-001","PAPER_POSITION_OPEN",
+                    at=NOW+timedelta(seconds=1)
+                )
+            with ResearchIntentJournal(path) as restarted:
+                fresh=intent(event_id="synthetic-NEW")
+                with self.assertRaisesRegex(RuntimeError,"reconciliação"):
+                    restarted.register(fresh,at=LATER)
+                self.assertEqual(restarted.quarantine_unresolved_after_restart(
+                    at=LATER
+                ),1)
+                self.assertEqual(restarted.pending_reconciliation_count(),1)
+                with self.assertRaisesRegex(RuntimeError,"reconciliação"):
+                    restarted.register(fresh,at=LATER+timedelta(seconds=1))
+                # Resolving in the research journal does NOT confirm a fill.
+                restarted.transition(
+                    "synthetic-001","RESOLVED_NO_ORDER",
+                    at=LATER+timedelta(seconds=1)
+                )
+                self.assertEqual(restarted.pending_reconciliation_count(),0)
+                self.assertTrue(restarted.register(
+                    fresh,at=LATER+timedelta(seconds=2)
+                ))
+
+    def test_terminal_research_outcome_does_not_block_next_session(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/"intents.sqlite3"
+            with ResearchIntentJournal(path) as first:
+                first.register(intent(),at=NOW)
+                first.transition(
+                    "synthetic-001","PAPER_POSITION_OPEN",
+                    at=NOW+timedelta(seconds=1)
+                )
+                first.transition(
+                    "synthetic-001","SIMULATED_TARGET_OBSERVED",
+                    at=LATER
+                )
+            with ResearchIntentJournal(path) as restarted:
+                self.assertEqual(restarted.pending_reconciliation_count(),0)
+                self.assertTrue(restarted.register(
+                    intent(event_id="synthetic-NEXT"),
+                    at=LATER+timedelta(seconds=1)
+                ))
+
     def test_unknown_simulated_transmission_is_always_quarantined(self):
         with ResearchIntentJournal(":memory:") as db:
             db.register(intent(),at=NOW)
