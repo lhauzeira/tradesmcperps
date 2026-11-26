@@ -133,6 +133,44 @@ class MonitorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Intervalo"):
             monitor(interval=1, once=True)
 
+    def test_signal_is_deduplicated_after_program_restart(self):
+        from smc_agent import adapters
+        from smc_agent.alerts import SignalRecord
+        fake = FakeAdapter()
+        class LocalMT5Adapter:
+            def __init__(self, symbol):
+                self.symbol = symbol
+                self.mt5 = fake.mt5
+            def connect(self):
+                return fake.mt5.account_info()
+            def close(self):
+                pass
+        signal = SignalRecord(
+            event_id="synthetic-once-1", symbol="GOLD", timeframe="M5",
+            candle_closed_at=NOW-timedelta(minutes=2),
+            side="buy", entry=4000, stop=3998, target=4005,
+            rr=2.5, reason="BOS + OB apenas teste",
+            source="test-fixture",
+        )
+        snap = MonitorSnapshot(
+            generated_utc=NOW.isoformat(), symbol="GOLD", server=SERVER,
+            connected_to_demo=True, state="SINAL DE PESQUISA — NÃO OPERAR",
+            last_closed_m5_utc=(NOW-timedelta(minutes=2)).isoformat(),
+            record=signal
+        )
+        with tempfile.TemporaryDirectory() as root:
+            with patch.object(adapters, "MT5Adapter", LocalMT5Adapter), \
+                 patch("smc_agent.monitor_local.capture", return_value=snap), \
+                 patch("smc_agent.monitor_local.webbrowser.open"):
+                monitor(once=True, folder=Path(root))
+                monitor(once=True, folder=Path(root))
+            data = Path(root) / "monitoramento_privado"
+            events = (data/"sinais.jsonl").read_text(encoding="utf-8").splitlines()
+            self.assertEqual(len(events), 1)
+            self.assertIn("synthetic-once-1", events[0])
+            self.assertTrue((data/"sinais.sqlite3").exists())
+            self.assertNotIn("login", events[0])
+
     def test_atomic_local_file_and_synthetic_journal(self):
         # Test only local file IO with a fully mocked adapter, no MT5 package.
         from smc_agent import adapters
