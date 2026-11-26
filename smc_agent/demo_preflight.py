@@ -16,7 +16,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
-from math import isfinite
 from typing import Any
 
 from .monitor_local import EXPECTED_SERVER, check_demo_account
@@ -95,11 +94,6 @@ class BrokerPreflightReport:
     def __post_init__(self):
         if self.can_submit_orders:
             raise ValueError("Preflight jamais autoriza enviar ordens")
-
-
-def _block(report: BrokerPreflightReport, code: str) -> BrokerPreflightReport:
-    from dataclasses import replace
-    return replace(report, blockers=report.blockers + (code,))
 
 
 def _valid_spec(spec: Any, volume: Decimal) -> tuple[str, ...]:
@@ -189,6 +183,14 @@ def _verify_observed_tick(evidence: Any, *, symbol: str,
         return ("EVIDENCIA_DE_PRECO_INVALIDA",)
     if old_ask < old_bid or abs(bid - old_bid) > tolerance or abs(ask - old_ask) > tolerance:
         return ("PRECO_MUDOU_DESDE_ANALISE",)
+    # Reject abnormal spread relative to the SAME asset's closed-M5 ATR.
+    # 25% is experimental and does not establish an optimal threshold.
+    try:
+        atr = _decimal(getattr(evidence, "m5_atr_price", None), "atr_m5")
+    except ValueError:
+        return ("ATR_M5_NAO_CONFIRMADO",)
+    if (ask - bid) / atr > Decimal("0.25"):
+        return ("SPREAD_ELEVADO_RELATIVO_ATR",)
     return ()
 
 
@@ -322,7 +324,7 @@ def estimate_demo_order(
             if not profit.is_finite() or profit >= 0:
                 raise ValueError("Stop P&L not negative")
             loss = -profit
-        except (ValueError, TypeError, ArithmeticError, AttributeError):
+        except (ValueError, TypeError, ArithmeticError, AttributeError, RuntimeError, OSError):
             blockers.append("CALCULO_PERDA_MT5_INDISPONIVEL")
         try:
             raw_margin = mt5.order_calc_margin(
