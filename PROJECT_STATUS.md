@@ -21,6 +21,9 @@ não uma versão lucrativa comprovada e NÃO um executor de ordens.
 | Respostas de corretora | Rejeição, execução parcial e timeout COMPLETAMENTE SIMULADOS, sem retry automático |
 | Registro de intenções | SQLite para deduplicação após reinício e quarentena de resultados desconhecidos |
 | Ensaio integrado | Corretora falsa + cálculo de risco + timeout + recuperação de estado, sem MetaTrader5 |
+| Paper autônomo integrado | Sinal fictício → orçamento → abertura Bid/Ask → alvo/stop/gap → diário SQLite; sem MT5 |
+| Prévia de pedidos MT5 | Rascunho de abertura e fechamento com SL/TP, lado do spread e ticket; sem order_send |
+| SMC → preflight corretora | Sinal M5 recente examinado pelo risco/margem do lote mínimo na conta DEMO, leitura apenas |
 | Diário | JSONL e SQLite local para sinais; não representam operações reais |
 | MFP | Adaptador sandbox experimental; contrato ainda não homologado |
 | Abertura/fechamento no MT5 | NÃO IMPLEMENTADO / NÃO HABILITADO |
@@ -35,7 +38,12 @@ não uma versão lucrativa comprovada e NÃO um executor de ordens.
   respostas fictícias de corretora.
 - **Não** se deve afirmar que esses testes novos passaram: a validação
   integrada ainda está pendente. GitHub Actions tem apresentado
-  falha de inicialização antes de executar os trabalhos.
+  falha de inicialização antes de executar os trabalhos; o último
+  workflow consultado tinha zero jobs, portanto não foi um resultado
+  de teste Python.
+- O ambiente local do assistente também não alcançou o GitHub por
+  DNS para baixar a branch. Falta rodar a suíte integrada no Windows
+  ou em um runner disponível antes de certificar o pacote.
 - O iniciador único ABRIR_SMC_AGENT.bat executa a suíte e os
   exemplos fictícios de ciclo e orçamento de risco.
 
