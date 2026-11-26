@@ -16,6 +16,11 @@ não uma versão lucrativa comprovada e NÃO um executor de ordens.
 | Pré-execução | Checa spread relativo a ATR, preços, tick e contrato; feriados/sessões continuam não verificados |
 | Gerenciamento de risco | Orçamentos hipotéticos com preços e capital fictícios, não consulta a conta |
 | Ciclo buy/sell stop/target | Ensaio fictício separado, sem conexão com o MT5 |
+| Pré-execução usando cálculo nativo MT5 | order_calc_profit / order_calc_margin e checagem de posições/ordens, conta DEMO; sem envio |
+| Contratos por ativo | Diagnóstico sanitizado XM DEMO somente leitura, sem dados de conta |
+| Respostas de corretora | Rejeição, execução parcial e timeout COMPLETAMENTE SIMULADOS, sem retry automático |
+| Registro de intenções | SQLite para deduplicação após reinício e quarentena de resultados desconhecidos |
+| Ensaio integrado | Corretora falsa + cálculo de risco + timeout + recuperação de estado, sem MetaTrader5 |
 | Diário | JSONL e SQLite local para sinais; não representam operações reais |
 | MFP | Adaptador sandbox experimental; contrato ainda não homologado |
 | Abertura/fechamento no MT5 | NÃO IMPLEMENTADO / NÃO HABILITADO |
@@ -25,7 +30,9 @@ não uma versão lucrativa comprovada e NÃO um executor de ordens.
 
 - Usuário confirmou 264 testes offline **OK** na v0.13 em 2026-11-26.
 - Foram acrescentados testes offline posteriores para risco, iniciador único,
-  cinco períodos e classificação de confluência.
+  cinco períodos, classificação de confluência, pré-execução nativa
+  simulada, persistência, diagnóstico sanitizado e tratamento de
+  respostas fictícias de corretora.
 - **Não** se deve afirmar que esses testes novos passaram: a validação
   integrada ainda está pendente. GitHub Actions tem apresentado
   falha de inicialização antes de executar os trabalhos.
