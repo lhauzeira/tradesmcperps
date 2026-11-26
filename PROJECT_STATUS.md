@@ -1,40 +1,68 @@
-# SMC Trading Agent — status
+# SMC Trading Agent — estado real do projeto
 
-## Public repository status
-The development branch now contains an **executable compact Python research prototype**:
-- confirmed fractals (no use of future unclosed candles)
-- simplified structural break (BOS) and full-wick order block detection
-- check for 50% mitigation before candle-close confirmation
-- conservative per-trade cash-risk gate (no martingale)
-- read-only MetaTrader 5 and MyFundedPerps sandbox adapter classes
-- deterministic offline demo and unit tests
-- GitHub Actions configuration for automated offline tests
+**Integração atual:** release/smc-unificado-rc1. Candidata de pesquisa,
+não uma versão lucrativa comprovada e NÃO um executor de ordens.
 
-Run the demo:
+## Componentes integrados e situação
 
-    python -m smc_agent.demo
+| Módulo | Situação |
+|---|---|
+| MT5 XMGlobal-MT5 5 DEMO | Leitura multiativos previamente validada pelo usuário em GOLD, US100Cash, US500Cash |
+| SMC H1/M5 | Gatilho teórico experimental preservado, sem execução |
+| Fibonacci OTE M5 | Análise observacional; filtro opcional, desligado no monitor |
+| H4/H1/M30/M15/M5 | Análise adicional de estrutura confirmada em cinco períodos; **nova nesta candidata e ainda não validada no PC do usuário** |
+| Pesquisa de confluência | Registra se H4 e M30/M15/M5 concordam com a direção; ainda não pode concluir que isso melhora a expectativa |
+| Relógio de corretora | Deslocamento AO VIVO provisório inferido com tick, H1 e M5; não implica fuso histórico |
+| Pré-execução | Checa spread relativo a ATR, preços, tick e contrato; feriados/sessões continuam não verificados |
+| Gerenciamento de risco | Orçamentos hipotéticos com preços e capital fictícios, não consulta a conta |
+| Ciclo buy/sell stop/target | Ensaio fictício separado, sem conexão com o MT5 |
+| Diário | JSONL e SQLite local para sinais; não representam operações reais |
+| MFP | Adaptador sandbox experimental; contrato ainda não homologado |
+| Abertura/fechamento no MT5 | NÃO IMPLEMENTADO / NÃO HABILITADO |
+| Lucratividade | NÃO DEMONSTRADA |
 
-Run tests:
+## Testes
 
-    python -m unittest discover -s tests -v
+- Usuário confirmou 264 testes offline **OK** na v0.13 em 2026-11-26.
+- Foram acrescentados testes offline posteriores para risco, iniciador único,
+  cinco períodos e classificação de confluência.
+- **Não** se deve afirmar que esses testes novos passaram: a validação
+  integrada ainda está pendente. GitHub Actions tem apresentado
+  falha de inicialização antes de executar os trabalhos.
+- O iniciador único ABRIR_SMC_AGENT.bat executa a suíte e os
+  exemplos fictícios de ciclo e orçamento de risco.
 
-**Scope clarification:** the GitHub version is a **compact implementation**, not yet a byte-for-byte upload of the richer ZIP generated in ChatGPT. The ZIP contains extra ZigZag, volume/liquidity confluences, synthetic CSV fixtures and CLI features. It passed **10 offline tests locally**; GitHub CI results must be verified separately. The compact version currently has **7 tests**.
+## Medição dos cinco períodos
 
-## Safety and limitations
-- Zero order execution; both send_order methods always raise RuntimeError.
-- Only sandbox MyFundedPerps tokens with prefix fp_test_ are accepted; no live tokens.
-- API routes/host are experimental and require verification against current official beta documentation before connecting to any account.
-- MyFundedPerps perpetual data and XM CFD data must be treated as distinct markets.
-- No profitability, backtest, forward-test or challenge success demonstrated.
-- The risk cap is an internal prototype rule, not a guarantee of prop firm compliance.
-- Do not put API tokens, passwords or account details in GitHub or screenshots.
+A versão atual usa a estratégia H1/M5 original para gerar sinais de
+pesquisa, preservando a comparação histórica com versões anteriores.
+H4, M30, M15 e o viés estrutural M5 são observações adicionais que
+ficam registradas no mesmo evento, sem alterar entrada ou stop.
+Somente depois de obter resultados de sinais com timestamps
+verificáveis será possível avaliar, fora da amostra, se exigir
+alinhamento desses períodos melhora a expectativa líquida.
 
-## Next milestones
-1. Confirm GitHub CI executes and fix failures; then prepare an application demo.
-2. Reconcile compact code with the complete local ZIP and port missing features.
-3. Read platform-native candles and apply timestamp/contract-specific validation.
-4. Backtest with transaction costs, drawdown and out-of-sample periods.
-5. Validate sandbox and paper execution with guards, protected exits and idempotency.
-6. Only after successful testing, discuss any execution automation.
+**Proteção:** o período adicional é obtido via MT5 starting position 1,
+não utiliza candle em formação, não promete fuso histórico e fica
+INDISPONIVEL quando o último fechamento falha nas verificações.
+Indisponibilidade não equivale a tendência neutra.
 
-No purchase or live trading is necessary to develop this research prototype.
+## Para habilitar, no futuro, qualquer ordem DEMO
+
+1. Validar ao vivo os cinco períodos, timezone, atrasos e períodos de negociação.
+2. Reconciliar moeda da conta, tick value de perda, margem,
+   comissões, swaps, regras de volume e stop level para cada ativo.
+3. Construir armazenamento transacional e sincronização de ordens/
+   posições da conta, com recuperação após reinício e falhas.
+4. Implementar executor estritamente DEMO, desligado por padrão,
+   com autorização explícita, exclusividade da conta permitida
+   e verificação dos resultados reportados pelo MT5.
+5. Testar recusas, execução parcial, alteração de spreads, lacunas,
+   ordens duplicadas, regras de perda diária e encerramento de emergência.
+6. Executar teste prospectivo em conta DEMO e analisar resultados
+   líquidos/expectativa e comportamento fora da amostra.
+7. MyFundedPerps: integração específica, distinta dos CFDs XM,
+   somente depois de verificar API e regras atuais.
+
+**Meta:** agente autônomo com gestão verificável. **Não confundir**
+capacidade operacional com vantagem lucrativa comprovada.
