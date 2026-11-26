@@ -12,6 +12,38 @@ A proof-of-concept that transforms selected Smart Money Concepts (SMC) rules int
 
 This is a compact implementation. Additional experiments with ATR-confirmed ZigZag, liquidity and volume confluences are maintained separately and still need to be reconciled.
 
+## Monitor multiativos + Fibonacci OTE (v0.12 experimental)
+
+A versão 0.12 adiciona um scanner independente, **somente leitura**,
+que recebe uma lista de até 12 instrumentos no arquivo ATIVOS_DEMO.txt.
+O usuário não precisa editar código: basta escrever um símbolo por linha,
+exatamente como aparece em Observação do Mercado do MT5 XM DEMO.
+O scanner mostra viés H1, análise SMC M5, Bid, Ask, spread na escala
+decimal correta de cada ativo e níveis de retração Fibonacci.
+
+- Executável por duplo clique: INICIAR_MONITOR_MULTIATIVOS_DEMO.bat
+- Painel HTML local: PAINEL_MULTI_DEMO.html
+- Testes de componentes sem corretora: TESTAR_CODIGO_OFFLINE.bat
+- Instruções técnicas e de segurança: builders/MULTIASSET_FIBONACCI.md
+
+Fibonacci é calculado a partir de pivôs já confirmados, incluindo os
+níveis 50%, 61,8%, 70,5% e 78,6%. A faixa 61,8–78,6% é uma hipótese
+de confluência OTE e **não** comprova vantagem estatística.
+
+A opção require_fibonacci=True no motor permite pesquisa de um filtro
+mais restritivo (zona OTE com reteste e overlap de Order Block).
+**Desligada por padrão**, inclusive nos monitores, para permitir
+experimentos A/B sem mudar silenciosamente a estratégia GOLD já usada.
+
+A cobertura é genérica para ativos disponíveis no terminal XM e com
+cotações/timestamps válidos. Não significa compatibilidade automática
+com todo instrumento de toda corretora e não aplica contratos GOLD ao
+restante dos mercados. A plataforma MFP precisa de seu próprio conector
+e validação. Em nenhuma hipótese há envio de ordens.
+
+O scanner v0.12 ainda precisa ser testado no computador do usuário; o
+monitor anterior GOLD foi integrado com sucesso anteriormente.
+
 ## Monitor ativo XM demo com deslocamento observado (v0.10 experimental)
 
 O primeiro diagnóstico do usuário em 2026-11-26 encontrou **tick do GOLD
