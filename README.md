@@ -12,6 +12,38 @@ A proof-of-concept that transforms selected Smart Money Concepts (SMC) rules int
 
 This is a compact implementation. Additional experiments with ATR-confirmed ZigZag, liquidity and volume confluences are maintained separately and still need to be reconciled.
 
+## Monitor ativo XM demo com deslocamento observado (v0.10 experimental)
+
+O primeiro diagnóstico do usuário em 2026-11-26 encontrou **tick do GOLD
++7200 segundos** e candles M5/H1 coerentes com o mesmo relógio de exibição.
+Isso justifica um tratamento **somente ao vivo** e provisório, não uma
+conversão de histórico sem verificação.
+
+`smc_agent.live_clock.reconcile_live_clock` detecta e valida a diferença
+entre o tick recente, o PC UTC e os últimos candles fechados M5/H1 a cada
+ciclo. Os deslocamentos possíveis (0h, +2h, +3h) são **candidatos testados**,
+nunca ajustes aplicados sem uma cotação compatível. Tick antigo, relógio
+futuro, barra em formação, divergência entre M5/H1 e tick ou conta não
+DEMO interrompem a análise antes de emitir sinais.
+
+O painel local indica explicitamente um **deslocamento observado,
+provisório**. A data de fechamento dos eventos SMC é convertida apenas
+para esse monitor ao vivo. O histórico de junho, as sessões de negociação
+históricas, resultados de backtest e execução de ordens permanecem
+desabilitados/não validados.
+
+No Windows, com o MT5 na conta DEMO:
+
+1. Baixe o ZIP da branch `feature/mt5-live-clock-v10` e extraia tudo.
+2. Opcionalmente, execute `TESTAR_CODIGO_OFFLINE.bat` para os testes locais
+   sem conexão com a corretora.
+3. Execute `INICIAR_MONITOR_XM_DEMO.bat` (o mesmo nome anterior).
+4. Observe no navegador o painel `MONITOR_LOCAL_DEMO.html`.
+5. Encerre com Ctrl+C na janela do monitor.
+
+Os testes de integração com o terminal XM real ainda dependem da próxima
+execução no computador do usuário. Não operar com alertas experimentais.
+
 ## Diagnóstico de horário XM / MT5 (v0.9 em revisão)
 
 A primeira integração na conta DEMO revelou um alerta legítimo de segurança:
