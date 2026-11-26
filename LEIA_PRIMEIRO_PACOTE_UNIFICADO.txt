@@ -30,6 +30,12 @@ O QUE JA FOI INTEGRADO NESTA MESMA PASTA
 - Quando houver sinal SMC M5 recente, o monitor tentara calcular
   perda ate stop e margem do LOTE MINIMO na conta DEMO via
   funcoes de LEITURA do MT5. Dados inconsistentes bloqueiam.
+- Calendario de sessoes e feriados por instrumento e dia UTC;
+  so possui horarios de EXEMPLO, NAO HORARIOS REAIS DA XM.
+- Previa de abertura SMC -> risco MT5 -> campos de solicitacao,
+  com verificacao dos modos de filling IOC/FOK (nao envia).
+- Bloqueio persistente contra DOIS processos controladores e
+  contra NOVAS entradas com reconciliacao apos reinicio pendente.
 
 - Verificador XM DEMO em modo leitura para calculo nativo de perda
   ate o stop e margem na MOEDA DA CONTA (sem abrir ordens).
@@ -53,7 +59,9 @@ COMO FUNCIONA A EXPERIENCIA UNICA DE TESTE
    (e) ciclo autonomo PAPER totalmente ficticio: risco, compra,
        acompanhamento Bid/Ask, alvo/stop, duplicidade e reinicio,
    (f) previa dos campos de abertura e fechamento MT5 para uma
-       posicao FICTICIA, sem transmitir solicitacoes.
+       posicao FICTICIA, sem transmitir solicitacoes,
+   (g) calendario ficticio de sessoes e feriados com horarios
+       UTC explicitos, SEM importar horario real da XM.
    Se falhar, o processo interrompe o teste no primeiro erro.
 5. Nao precisa mais abrir tres testes diferentes.
 6. Quando e somente quando o pacote estiver apto a monitorar,
