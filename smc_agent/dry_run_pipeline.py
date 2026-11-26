@@ -17,6 +17,7 @@ from types import SimpleNamespace
 
 from .demo_preflight import DemoOrderHypothesis, estimate_demo_order
 from .order_intent_journal import ResearchOrderIntent, ResearchIntentJournal
+from .fake_broker_replies import FakeBrokerReply, classify_fake_broker_reply
 
 
 class FakeDemoBroker:
@@ -101,6 +102,18 @@ def rehearse_demo_preflight_recovery() -> dict[str, object]:
     if report.theoretical_loss_account_currency is None:
         raise AssertionError("Synthetic native risk calculation failed")
 
+    # A fake network timeout is NEVER treated as proof of rejection:
+    # blindly resending could double the position in a real environment.
+    fake_reply=classify_fake_broker_reply(
+        FakeBrokerReply(planned.signal_id, planned.symbol,
+                        planned.volume, "FAKE_TIMEOUT"),
+        expected_symbol=planned.symbol,
+        expected_signal_id=planned.signal_id,
+    )
+    if (fake_reply.state != "QUARENTENA"
+            or fake_reply.automatic_retry_allowed):
+        raise AssertionError("No-retry policy failed for uncertain response")
+
     with TemporaryDirectory() as folder:
         database=Path(folder)/"research_only.sqlite3"
         intent=ResearchOrderIntent(
@@ -138,6 +151,8 @@ def rehearse_demo_preflight_recovery() -> dict[str, object]:
         "broker_blockers": list(report.blockers),
         "intent_after_restart": state,
         "duplicate_prevented": deduped,
+        "timeout_policy": fake_reply.state,
+        "automatic_retry_allowed": fake_reply.automatic_retry_allowed,
         "orders_sent": 0,
     }
 
@@ -150,6 +165,7 @@ def main() -> None:
     print(f"Bloqueios intencionais: {', '.join(result['broker_blockers'])}")
     print(f"Estado apos reinicio: {result['intent_after_restart']}")
     print(f"Duplicidade impedida: {result['duplicate_prevented']}")
+    print(f"Timeout simulado: {result['timeout_policy']}; reenvio permitido: {result['automatic_retry_allowed']}")
     print("SEM CONEXAO MT5, ZERO ORDENS ENVIADAS. Lucro nao demonstrado.")
 
 
