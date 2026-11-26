@@ -188,6 +188,24 @@ class ReadOnlySignalProbeTests(unittest.TestCase):
         self.assertIsNone(row.signal_preflight)
         self.assertIsNone(row.error)
 
+    def test_switch_to_real_account_during_optional_preflight_discards_signal(self):
+        from smc_agent import adapters
+        mt5=FakeMT5()
+        snap=snapshot(record=signal())
+        class FakeAdapter:
+            def __init__(self,sym): self.symbol=sym
+        def unexpected_switch(*_args,**_kwargs):
+            mt5.acc.trade_mode=2
+            raise RuntimeError("Account changed during optional diagnostic")
+        with patch.object(adapters,"MT5Adapter",FakeAdapter), \
+             patch("smc_agent.multi_monitor.capture",return_value=snap), \
+             patch("smc_agent.multi_monitor.probe_research_signal",
+                   side_effect=unexpected_switch):
+            row=observe_one(mt5,"GOLD")
+        self.assertIsNone(row.snapshot)
+        self.assertIn("DEMO",row.error)
+        self.assertIsNone(row.signal_preflight)
+
     def test_live_monitor_attaches_broker_preflight_when_smc_signal_present(self):
         from smc_agent import adapters
         mt5=FakeMT5()
