@@ -1,11 +1,24 @@
 GUIA PRÁTICO — SMC TRADING AGENT NO META TRADER 5 DA XM
-Versão 0.8 EXPERIMENTAL • Apenas conta DEMO • Nenhuma ordem é enviada
+Versão 0.10 EXPERIMENTAL • Apenas conta DEMO • Nenhuma ordem é enviada
 
 O QUE VOCÊ VAI VER?
 Uma página local, aberta no navegador, que acompanha o GOLD da sua conta DEMO
 da XM. A página mostra Bid, Ask, viés H1, último candle M5 fechado e, se
 a metodologia SMC detectar alguma oportunidade, uma prévia de sinal.
 Não é recomendação de negociação; a estratégia ainda não foi validada.
+
+ATUALIZAÇÃO 0.10 — DIAGNÓSTICO REAL +02:00 (26/11/2026)
+• O diagnóstico real enviado mostrou: PC UTC 15:42:08, tick GOLD bruto
+  17:42:08, fechamento M5 bruto 17:40:00 e H1 17:00:00.
+• Os três valores são coerentes com +02:00 na leitura atual da XM demo.
+• O programa calcula a diferença a cada leitura; não fixa GMT+2, nem
+  aplica fuso de verão ou alternância automática ao backtest histórico.
+• Apenas apresenta prévias de sinal em conta demo quando o tick atual,
+  os candles M5/H1 fechados e o horário do PC são consistentes.
+• Se o relógio ou dados divergirem, o monitor PAUSA. Isso é esperado.
+• Não altere o relógio do Windows e nunca habilite negociação automática.
+• Para testar, use a pasta extraída v0.10 e o mesmo
+  INICIAR_MONITOR_XM_DEMO.bat. Não precisa instalar Python/MT5 de novo.
 
 PASSO 1 — PREPARAR O COMPUTADOR (WINDOWS)
 • Tenha o MetaTrader 5 da XM aberto e conectado à conta DEMO.
@@ -16,7 +29,7 @@ PASSO 1 — PREPARAR O COMPUTADOR (WINDOWS)
 • NÃO compartilhe número da conta, senhas ou tokens.
 
 PASSO 2 — EXTRAIR O PROJETO COMPLETO
-• Abra o GitHub na branch feature/mt5-demo-monitor-v08.
+• Abra o GitHub na branch feature/mt5-live-clock-v10.
 • Baixe o ZIP desta branch e use "Extrair tudo" do Windows.
 • Não execute diretamente de dentro do arquivo ZIP.
 
@@ -30,6 +43,9 @@ PASSO 3 — INICIAR
   perguntará se você deseja instalá-lo com pip, através do Python.
   Requer acesso à Internet na primeira instalação.
 • Uma página chamada MONITOR_LOCAL_DEMO.html será aberta no navegador.
+• Ela deve mostrar "UTC+02:00 (observado agora, provisório)" apenas se o
+  tick, M5 e H1 atuais confirmarem esse desvio a cada leitura.
+• Esse deslocamento NÃO é aplicado ao histórico de junho ou ao backtest.
 • Deixe a janela preta do monitor aberta enquanto quiser acompanhar.
   A página atualiza sozinha a cada 30 segundos.
 
