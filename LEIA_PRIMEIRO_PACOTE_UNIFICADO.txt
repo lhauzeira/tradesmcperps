@@ -63,6 +63,10 @@ COMO FUNCIONA A EXPERIENCIA UNICA DE TESTE
    (g) calendario ficticio de sessoes e feriados com horarios
        UTC explicitos, SEM importar horario real da XM.
    Se falhar, o processo interrompe o teste no primeiro erro.
+   O relatorio aparece no CMD e tambem fica salvo em:
+     monitoramento_privado/resultado_testes_unificados.txt
+   Esse arquivo e LOCAL, ignorado pelo Git e nao contem
+   consultas reais a corretora; contem somente testes offline.
 5. Nao precisa mais abrir tres testes diferentes.
 6. Quando e somente quando o pacote estiver apto a monitorar,
    escolha opcao 2 para acompanhar a conta XMGlobal-MT5 5 DEMO.
