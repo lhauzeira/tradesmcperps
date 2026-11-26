@@ -12,6 +12,53 @@ A proof-of-concept that transforms selected Smart Money Concepts (SMC) rules int
 
 This is a compact implementation. Additional experiments with ATR-confirmed ZigZag, liquidity and volume confluences are maintained separately and still need to be reconciled.
 
+## v0.14 — Dimensionamento de risco multiativos (SOMENTE FICTÍCIO)
+
+Desenvolvemos um módulo independente de cálculo hipotético de risco
+para instrumentos genéricos (GOLD, índices, Forex etc.). O cálculo
+NÃO usa as regras do GOLD para dimensionar outros ativos e NÃO está
+habilitado para execução automática.
+
+Arquivos:
+- smc_agent/multi_risk.py: motor de orçamento e limites hipotéticos;
+- tests/test_multi_risk.py: testes offline com preços inventados;
+- SIMULAR_RISCO_MULTIATIVOS_OFFLINE.bat: demonstra o cálculo fictício
+  sem abrir MetaTrader 5, sem consultar saldo ou enviar ordens;
+- TESTAR_CODIGO_OFFLINE.bat: executa toda a suíte local.
+
+O módulo recebe explicitamente:
+1. Contrato do instrumento (símbolo, tick size, valor conservador do
+   tick por lote e sua moeda, lote mínimo, máximo e passo);
+2. Cotação Bid/Ask, direção e stop hipotéticos;
+3. Capital e limites FICTÍCIOS: percentual máximo por operação,
+   teto financeiro individual, perda diária e exposição reservada;
+4. Estado FICTÍCIO de posições já abertas, IDs de sinais usados,
+   kill switch e confiabilidade da conexão;
+5. Reserva adicional ILUSTRATIVA para custos por operação e por lote.
+
+Compras são calculadas pelo Ask e vendas pelo Bid. Todos os preços
+devem respeitar o tick size do ativo. Se o lote mínimo já consumir
+mais que o orçamento, nenhum volume é retornado. Os lotes obedecem
+ao padrão min + N*step e respeitam o máximo.
+
+O módulo pode retornar PESQUISA_APENAS para um cálculo aritmético
+possível. O campo can_submit_orders é SEMPRE False, inclusive quando
+a matemática passa. Os portões da v0.13 continuam bloqueando execução
+por sessões e feriados não verificados.
+
+**Limitações fundamentais:** nenhuma informação de saldo, posições,
+ordens, margem, comissão, swap ou risco diário é consultada na XM.
+O capital e os números do exemplo são totalmente inventados; não
+representam a conta do usuário. Valor de tick, moeda, condições de
+mercado, arredondamento, margem e custos devem ser autenticados por
+instrumento na DEMO antes de qualquer eventual ordem. Stop-loss
+não garante perda máxima devido a gaps e slippage. O histórico de
+IDs e reservas ainda não é persistido nem sincronizado com o terminal.
+
+Próximos passos: persistência auditável, reconciliação de ordens e
+posições reais na DEMO, verificação de margem e sessões, decisões de
+emergência e testes de execução em sandbox com autorização explícita.
+
 ## v0.13 — Primeiro portão de segurança antes de ordens DEMO
 
 O monitor multiativos agora exibe, em cada instrumento, um diagnóstico de
