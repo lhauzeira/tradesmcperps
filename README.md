@@ -1,5 +1,46 @@
 # SMC Trading Agent — Builders Prototype
 
+## Preparação de execução XM DEMO — sem ordens
+
+Para preparar a futura automação, incluímos dois componentes novos na
+mesma versão integrada:
+
+**smc_agent/demo_preflight.py** — consulta a conta XMGlobal-MT5 5
+somente se for DEMO, verifica valores atuais do Bid/Ask, precisão,
+volume, stop e alvo, ordens/posições existentes, e chama apenas
+as funções MT5 de leitura order_calc_profit e order_calc_margin
+para estimar a perda teórica ao stop e a margem na **moeda da conta**.
+Não usa o valor de tick presumido do GOLD para os outros ativos.
+Faltas de saldo/equity, margem, sessão ou cotação recente bloqueiam
+a preparação. A cotação recente é comparada ao relógio provisório
+já conciliado pelo monitor H1/M5, quando a evidência é fornecida.
+
+O módulo **não envia nenhuma ordem**, não chama order_send nem
+order_check e o relatório sempre marca can_submit_orders=False.
+Sessões/feriados e execução continuam bloqueados. O custo extra
+é uma reserva ilustrativa; preço de stop não é perda máxima garantida
+em caso de gap, slippage ou falha do broker. A estimativa de margem
+não é uma decisão de crédito da corretora.
+
+**smc_agent/order_intent_journal.py** — diário SQLite de INTENÇÕES DE
+PESQUISA, separado das posições reais. Protege o ID do sinal contra
+duplicidade após reinício, verifica que os parâmetros não mudaram e
+oferece quarentena (RECONCILE_REQUIRED) para pedidos pendentes.
+A função de quarentena deverá ser chamada obrigatoriamente na
+inicialização do eventual executor autorizado. Ela **não** confirma
+nenhum fill ou ordem executada.
+
+Esses componentes serão exercitados com corretora totalmente falsa
+dentro dos testes offline do ABRIR_SMC_AGENT.bat, opção 1.
+Eles ainda não estão acoplados a um executor real; não acrescente
+nenhuma configuração que habilite envio de ordens na RC1.
+
+**Próximos bloqueios reais**: horários XM por instrumento/feriados,
+comissões reais e margem, reconciliar ordens e posições existentes,
+persistência do estado por conta demo e recuperação em caso de
+desconexão, idempotência em falhas de rede, fills parciais e
+rejeições, rotina de encerramento protegida e testes prospectivos.
+
 ## Cinco períodos de análise — H4/H1/M30/M15/M5
 
 A partir desta candidata integrada, o monitor XM DEMO exibe a
