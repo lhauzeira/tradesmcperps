@@ -30,6 +30,7 @@ def validate_all(*, root: Path | None = None) -> int:
         ("PREFLIGHT E REINICIO SIMULADOS", [sys.executable, "-m", "smc_agent.dry_run_pipeline"]),
         ("CICLO PAPER AUTONOMO FICTICIO", [sys.executable, "-m", "smc_agent.paper_orchestrator"]),
         ("PREVIA FICTICIA DE ABERTURA E FECHAMENTO MT5", [sys.executable, "-m", "smc_agent.mt5_request_preview"]),
+        ("SESSOES E FERIADOS FICTICIOS", [sys.executable, "-m", "smc_agent.session_calendar"]),
     )
     for label, argv in commands:
         print(f"\n--- {label} ---", flush=True)
@@ -38,7 +39,7 @@ def validate_all(*, root: Path | None = None) -> int:
             print(f"\nFALHOU: {label}. Nenhum monitor foi iniciado.", flush=True)
             return result.returncode
     print("\n" + "=" * 67, flush=True)
-    print("VALIDACAO OFFLINE CONCLUIDA: TESTES E CINCO ENSAIOS FICTICIOS OK.", flush=True)
+    print("VALIDACAO OFFLINE CONCLUIDA: TESTES E SEIS ENSAIOS FICTICIOS OK.", flush=True)
     print("Isso NAO comprova lucro, execucao na corretora ou sistema final.", flush=True)
     print("Nenhuma ordem enviada.", flush=True)
     return 0
@@ -72,6 +73,8 @@ def main(argv: list[str] | None = None) -> int:
             "Diagnostico de cotacao/spread: somente leitura\n"
             "Preflight XM DEMO: order_calc_profit/margin, posicoes/ordens (read-only)\n"
             "Preflight EXIGE evidencias recentes de preco, sessao continua bloqueada\n"
+            "Calendario UTC explicitamente verificado por ativo: apenas laboratorio (sem horarios XM reais)\n"
+            "Controle exclusivo de processo e reinicio: sem permissao de execucao\n"
             "Intencoes em SQLite: deduplicacao e quarentena apos reinicio\n"
             "Orquestrador paper: risco, abertura, saida, reinicio (apenas dados ficticios)\n"
             "Blueprint MT5 de abertura e fechamento: PREVIA SEM ENVIO\n"
