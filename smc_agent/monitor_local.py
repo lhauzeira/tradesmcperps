@@ -20,6 +20,7 @@ import webbrowser
 
 from .alerts import SignalRecord, from_engine
 from .engine import analyze, macro_bias
+from .fibonacci import FibonacciObservation, observe_fibonacci
 from .journal import SignalJournal
 from .lifecycle import PublishedSignal
 from .live_clock import reconcile_live_clock
@@ -57,6 +58,8 @@ class MonitorSnapshot:
     age_last_m5_seconds: float | None = None
     record: SignalRecord | None = None
     clock_offset_label: str = "NÃO VERIFICADO"
+    fibonacci: FibonacciObservation | None = None
+    price_digits: int = 2
     warning: str = "Somente pesquisa. Não operar com esses sinais."
 
 
@@ -122,6 +125,16 @@ def capture(adapter, *, now: datetime | None = None,
 
     bias = macro_bias(h1)
     bias_text = "ALTA" if bias > 0 else "BAIXA" if bias < 0 else "NEUTRO"
+    fib = observe_fibonacci(m5, side="buy" if bias > 0 else "sell") if bias != 0 else None
+    # The MT5 symbol itself determines quote precision. No FX/crypto
+    # instrument is formatted using GOLD's hard-coded 2 digits.
+    info_fn = getattr(adapter.mt5, "symbol_info", None)
+    digits = 2
+    if callable(info_fn):
+        info = info_fn(adapter.symbol)
+        raw_digits = getattr(info, "digits", None) if info is not None else None
+        if isinstance(raw_digits, int) and not isinstance(raw_digits, bool) and 0 <= raw_digits <= 8:
+            digits = raw_digits
     record = (from_engine(signal, symbol=adapter.symbol, timeframe="M5",
                           candle_closed_at=m5_close,
                           source="xm-demo-smc-v10-observed-live-clock")
@@ -136,14 +149,19 @@ def capture(adapter, *, now: datetime | None = None,
         quote_bid=bid, quote_ask=ask, quote_time_utc=clock.tick_utc.isoformat(),
         age_last_m5_seconds=round(age, 1), record=record,
         clock_offset_label=clock.offset_label,
+        fibonacci=fib, price_digits=digits,
         warning="Horário AO VIVO reconciliado com tick, M5 e H1: "
                 "não prova fuso histórico. SMC experimental, sem ordens, "
                 "custos, sessões históricas ou validação de resultado."
     )
 
 
-def _fmt_price(value: float | None) -> str:
-    return "—" if value is None else f"{value:,.2f}"
+def _fmt_price(value: float | None, digits: int = 2) -> str:
+    if value is None:
+        return "—"
+    if not isinstance(digits, int) or isinstance(digits, bool) or not 0 <= digits <= 8:
+        raise ValueError("Invalid symbol price precision")
+    return f"{value:,.{digits}f}"
 
 
 def _plain(value) -> str:
@@ -169,9 +187,9 @@ def render_html(snapshot: MonitorSnapshot, *, last_event: dict | None = None) ->
         dir_text = "COMPRA" if event["side"] == "buy" else "VENDA"
         signal_section = (
             f"<p><strong>Último sinal experimental:</strong> {_plain(dir_text)}</p>"
-            f"<div class='columns'><div>Entrada teórica<br><b>{_fmt_price(event['entry'])}</b></div>"
-            f"<div>Stop teórico<br><b>{_fmt_price(event['stop'])}</b></div>"
-            f"<div>Alvo teórico<br><b>{_fmt_price(event['target'])}</b></div></div>"
+            f"<div class='columns'><div>Entrada teórica<br><b>{_fmt_price(event['entry'], snapshot.price_digits)}</b></div>"
+            f"<div>Stop teórico<br><b>{_fmt_price(event['stop'], snapshot.price_digits)}</b></div>"
+            f"<div>Alvo teórico<br><b>{_fmt_price(event['target'], snapshot.price_digits)}</b></div></div>"
             f"<p>Fechamento do candle (UTC): {_plain(event['close'])}</p>"
             f"<p>Motivo: {_plain(event['reason'])}</p>"
             "<p class='caution'>Este é um alerta de pesquisa, não ordem executada "
@@ -181,6 +199,20 @@ def render_html(snapshot: MonitorSnapshot, *, last_event: dict | None = None) ->
     if snapshot.quote_bid is not None and snapshot.quote_ask is not None:
         spread = snapshot.quote_ask - snapshot.quote_bid
     status_badge = _plain(snapshot.state)
+    if snapshot.fibonacci is None:
+        fib_section = "<p>Sem impulso confirmado compatível com o viés H1.</p>"
+    else:
+        fb = snapshot.fibonacci
+        fmt = lambda value: _fmt_price(value, snapshot.price_digits)
+        fib_section = (
+            "<p>Fibonacci experimental: " + _plain(fb.side.upper()) + "</p>"
+            f"<p>50%: <b>{fmt(fb.price_50)}</b> · "
+            f"61,8%: <b>{fmt(fb.price_618)}</b> · "
+            f"70,5%: <b>{fmt(fb.price_705)}</b> · "
+            f"78,6%: <b>{fmt(fb.price_786)}</b></p>"
+            f"<p>Zona OTE: {fmt(fb.zone_low)}–{fmt(fb.zone_high)}"
+            f" · Estado: {_plain(fb.status)}</p>"
+        )
     html = f"""<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta http-equiv="refresh" content="30">
@@ -202,18 +234,22 @@ a{{color:#a9d2ff}}.footer{{font-size:13px;color:#90a5b7}}
 <header><div><h1>SMC Trading Agent</h1><small>Monitor local • XM GOLD • conta DEMO</small></div>
 <span class="badge">{status_badge}</span></header>
 <div class="card"><h2>Mercado</h2><div class="columns">
-<div>Bid atual<br><b>{_fmt_price(snapshot.quote_bid)}</b></div>
-<div>Ask atual<br><b>{_fmt_price(snapshot.quote_ask)}</b></div>
-<div>Spread atual em preço<br><b>{_fmt_price(spread)}</b></div>
+<div>Bid atual<br><b>{_fmt_price(snapshot.quote_bid, snapshot.price_digits)}</b></div>
+<div>Ask atual<br><b>{_fmt_price(snapshot.quote_ask, snapshot.price_digits)}</b></div>
+<div>Spread atual em preço<br><b>{_fmt_price(spread, snapshot.price_digits)}</b></div>
 <div>Viés H1<br><b>{_plain(snapshot.h1_bias)}</b></div>
 </div><p>Último candle M5 fechado: {_plain(snapshot.last_closed_m5_utc or '—')}<br>
-Fechamento Bid M5: {_fmt_price(snapshot.last_m5_bid_close)}<br>
+Fechamento Bid M5: {_fmt_price(snapshot.last_m5_bid_close, snapshot.price_digits)}<br>
 Última cotação reportada: {_plain(snapshot.quote_time_utc or 'indisponível')}</p></div>
 <div class="card"><h2>Horários do MT5 — apenas pesquisa ao vivo</h2>
 <p>Diferença observada nesta leitura: <b>{_plain(snapshot.clock_offset_label)}</b></p>
 <p>Isso não prova o fuso de junho nem confirma horários históricos. Cada leitura
 é validada novamente com tick, M5 e H1. Se houver divergência, o monitor pausa.
 Não altere o relógio do computador.</p></div>
+<div class="card"><h2>Fibonacci — confluência em observação</h2>
+{fib_section}
+<p>OTE apenas como contexto, não como filtro obrigatório dos sinais.
+O valor estatístico dessa confluência ainda precisa ser testado.</p></div>
 <div class="card"><h2>Análise SMC (experimental)</h2>{signal_section}</div>
 <div class="card"><h2>Segurança e funcionamento</h2>
 <p>Somente dados de mercado e análises locais. Ordens enviadas: <b>0</b>.
