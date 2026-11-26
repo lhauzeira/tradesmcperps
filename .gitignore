@@ -27,3 +27,9 @@ GOLD_*.csv
 *_MT5_TICKS_*.csv
 raw_market_data/
 market_data_private/
+
+# Local-only monitoring output; never publish account or signal traces
+monitoramento_privado/
+MONITOR_LOCAL_DEMO.html
+MONITOR_LOCAL_DEMO.html.tmp
+*.jsonl
