@@ -1,3 +1,28 @@
+v0.14 — TESTE DO GERENCIADOR DE RISCO (AINDA SEM ORDENS)
+
+Confirmamos que a v0.13 concluiu 264 testes offline no seu Windows.
+
+1. Baixe a branch feature/multiasset-risk-guard-v14 como ZIP.
+2. Extraia TUDO em uma pasta NOVA. Nao misture arquivos antigos.
+3. Execute TESTAR_CODIGO_OFFLINE.bat e aguarde o resultado "OK".
+4. Execute SIMULAR_RISCO_MULTIATIVOS_OFFLINE.bat.
+5. Nessa segunda janela vera valores TODOS INVENTADOS de lote
+   hipotetico, perda teorica ate stop e reserva de custos.
+   O programa nao importa a biblioteca MT5, nao consulta conta,
+   nao mostra saldo e nao envia ordens. Nao e lucro real.
+6. Se quiser continuar monitorando GOLD, US100Cash e US500Cash,
+   abra ATIVOS_DEMO.txt na pasta nova, habilite os 3 simbolos
+   com os nomes exatos do XM demo e execute:
+      INICIAR_MONITOR_MULTIATIVOS_DEMO.bat
+   A v0.14 nao altera os sinais do monitor da v0.13.
+7. Envie o resultado dos testes e do exemplo de risco. Nao
+   compartilhe numero de conta, tokens, senhas nem saldos.
+
+O dimensionamento de lotes de v0.14 NAO e aplicado automaticamente ao
+MT5. Ainda nao temos margens, perdas diarias, feriados, contratos,
+comissoes e sincronizacao da conta de maneira suficiente para
+autorizar a primeira ordem demo.
+
 v0.13 — PREPARACAO PARA ORDENS DEMO, AINDA SEM ABRIR ORDENS
 
 Estamos construindo o portao de seguranca para uma etapa futura:
