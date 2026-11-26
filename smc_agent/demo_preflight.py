@@ -151,11 +151,53 @@ def _parse_stop_target(intent: DemoOrderHypothesis, *,
     return tuple(blocks)
 
 
+def _verify_observed_tick(evidence: Any, *, symbol: str,
+                          now: datetime, bid: Decimal, ask: Decimal,
+                          spec: Any) -> tuple[str, ...]:
+    """Cross-check recent reconciled live-clock evidence from capture().
+
+    A stale prior snapshot or changed quote must not be mistaken for
+    the same planned entry. Nothing here authorizes execution.
+    """
+    if evidence is None:
+        return ("COTACAO_RECENTE_NAO_CONCILIADA",)
+    if getattr(evidence, "symbol", None) != symbol or getattr(
+            evidence, "connected_to_demo", False) is not True:
+        return ("EVIDENCIA_ATIVO_OU_CONTA_INCOERENTE",)
+    label = getattr(evidence, "clock_offset_label", None)
+    if not isinstance(label, str) or "observado agora, provisório" not in label:
+        return ("RELOGIO_AO_VIVO_NAO_VALIDADO",)
+    try:
+        stamp = datetime.fromisoformat(getattr(evidence, "quote_time_utc"))
+        generated = datetime.fromisoformat(getattr(evidence, "generated_utc"))
+        if (stamp.tzinfo is None or stamp.utcoffset() is None or
+                generated.tzinfo is None or generated.utcoffset() is None):
+            raise ValueError("naive timestamp")
+    except (ValueError, TypeError, AttributeError):
+        return ("HORARIOS_DA_EVIDENCIA_INVALIDOS",)
+    now = _aware_now(now)
+    age = (now - stamp.astimezone(timezone.utc)).total_seconds()
+    created_age = (now - generated.astimezone(timezone.utc)).total_seconds()
+    if not (0 <= age <= 15 and -3 <= created_age <= 15):
+        return ("COTACAO_OU_ANALISE_DESATUALIZADA",)
+    try:
+        old_bid = _decimal(getattr(evidence, "quote_bid", None), "old_bid")
+        old_ask = _decimal(getattr(evidence, "quote_ask", None), "old_ask")
+        tick_size = _decimal(getattr(spec, "trade_tick_size", None), "tick_size")
+        tolerance = max(5 * tick_size, (ask - bid) * 2)
+    except ValueError:
+        return ("EVIDENCIA_DE_PRECO_INVALIDA",)
+    if old_ask < old_bid or abs(bid - old_bid) > tolerance or abs(ask - old_ask) > tolerance:
+        return ("PRECO_MUDOU_DESDE_ANALISE",)
+    return ()
+
+
 def estimate_demo_order(
     mt5: Any, intent: DemoOrderHypothesis, *,
     now: datetime,
     limits: BrokerSafetyLimits = BrokerSafetyLimits(),
     expected_server: str = EXPECTED_SERVER,
+    market_evidence: Any = None,
 ) -> BrokerPreflightReport:
     """Safe broker-provided hypothetical loss/margin in account currency.
 
@@ -163,7 +205,7 @@ def estimate_demo_order(
     never performs execution and always reports can_submit_orders=False.
     On failure to verify account identity: STOP, without reading symbols.
     """
-    _aware_now(now)
+    now = _aware_now(now)
     account = mt5.account_info()
     check_demo_account(account, mt5, expected_server=expected_server)
 
@@ -254,6 +296,10 @@ def estimate_demo_order(
     if ask < bid:
         blockers.append("SPREAD_INVERTIDO")
     blockers.extend(_parse_stop_target(intent, bid=bid, ask=ask, spec=spec))
+    blockers.extend(_verify_observed_tick(
+        market_evidence, symbol=intent.symbol, now=now, bid=bid, ask=ask,
+        spec=spec
+    ))
 
     side_code = getattr(
         mt5, "ORDER_TYPE_BUY" if intent.side == "buy" else "ORDER_TYPE_SELL", None
