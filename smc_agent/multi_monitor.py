@@ -4,6 +4,7 @@ Names come from ATIVOS_DEMO.txt; every asset gets independent status.
 Uses market-specific display precision; never copies GOLD's risk contract.
 """
 from __future__ import annotations
+import argparse
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from html import escape
