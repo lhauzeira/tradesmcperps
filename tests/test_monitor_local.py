@@ -200,6 +200,30 @@ class MonitorTests(unittest.TestCase):
         self.assertNotIn("<script>", rendered)
         self.assertIn("&lt;script&gt;", rendered)
 
+    def test_forex_price_digits_and_fibonacci_panel_are_read_only(self):
+        from smc_agent.fibonacci import FibonacciObservation
+        fib = FibonacciObservation(
+            side="buy",from_index=3,to_index=10,confirmed_at=12,
+            start_price=1.08000,end_price=1.10000,
+            price_50=1.09000,price_618=1.08764,
+            price_705=1.08590,price_786=1.08428,
+            zone_low=1.08428,zone_high=1.08764,
+            latest_close=1.08550,status="EM_ZONA_OTE"
+        )
+        snap=MonitorSnapshot(
+            generated_utc=NOW.isoformat(),symbol="EURUSD",server=SERVER,
+            connected_to_demo=True,state="AGUARDANDO SETUP SMC",
+            quote_bid=1.08541,quote_ask=1.08553,
+            h1_bias="ALTA",price_digits=5,fibonacci=fib
+        )
+        html=render_html(snap)
+        self.assertIn("EURUSD",html)
+        self.assertIn("1.08541",html)
+        self.assertIn("1.08764",html)
+        self.assertIn("Fibonacci",html)
+        self.assertIn("filtro obrigatório",html)
+        self.assertIn("Ordens enviadas: <b>0</b>",html)
+
     def test_local_dashboard_has_no_remote_content(self):
         report = capture(FakeAdapter(), now=NOW)
         output = render_html(report)
