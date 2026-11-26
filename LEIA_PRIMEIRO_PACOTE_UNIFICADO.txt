@@ -25,6 +25,14 @@ O QUE JA FOI INTEGRADO NESTA MESMA PASTA
 - Calculadora ficticia de risco por instrumento, perda diaria, limite
   de exposicao, IDs duplicados, perda de conexao e botao de parada.
 - Adaptador MFP preliminar, ainda NAO homologado para API atual.
+- Verificador XM DEMO em modo leitura para calculo nativo de perda
+  ate o stop e margem na MOEDA DA CONTA (sem abrir ordens).
+- Verificador de cotacao com evidencia de horario conciliado;
+  sempre exige validacao de sessao/feriado antes de operar.
+- Diario de INTENCOES DE PESQUISA em SQLite, com bloqueio por
+  duplicidade e quarentena apos reinicio.
+- Ensaio integrado sem MT5 real, incluindo recuperacao de intencoes
+  com resultado desconhecido.
 
 COMO FUNCIONA A EXPERIENCIA UNICA DE TESTE
 1. Mantenha o computador em Windows com Python 3.11 ja instalado.
@@ -33,7 +41,9 @@ COMO FUNCIONA A EXPERIENCIA UNICA DE TESTE
 4. Escolha opcao 1 - VALIDAR TUDO. O programa roda automaticamente:
    (a) todos os testes offline do projeto,
    (b) ciclo ficticio de BUY, STOP/ALVO,
-   (c) dimensionamento de risco ficticio.
+   (c) dimensionamento de risco ficticio,
+   (d) preflight com corretora falsa + reinicio/recuperacao de
+       intencoes, sem qualquer ordem enviada.
    Se falhar, o processo interrompe o teste no primeiro erro.
 5. Nao precisa mais abrir tres testes diferentes.
 6. Quando e somente quando o pacote estiver apto a monitorar,
@@ -42,7 +52,9 @@ COMO FUNCIONA A EXPERIENCIA UNICA DE TESTE
    US100Cash e US500Cash, tire o # antes do nome, se existirem
    com esses nomes no seu MT5.
 7. Escolha opcao 3 para ver o que o bot ainda NAO faz.
-8. Feche pelo menu (opcao 4). Quando houver monitor ativo,
+8. Escolha opcao 4 para listar informacoes nao confidenciais
+   sobre contratos do MT5 XM DEMO em modo somente leitura.
+9. Feche pelo menu (opcao 5). Quando houver monitor ativo,
    encerre primeiro com Ctrl+C e confirme S se solicitado.
 
 RESTRICOES IMPORTANTES ANTES DE UM ROBÔ AUTONOMO
