@@ -146,7 +146,10 @@ def analyze(macro: list[Candle], entry: list[Candle], rr: float = 2.5, *,
     if require_fibonacci:
         # Lazy import: fibonacci uses confirmed_pivots in this module.
         from .fibonacci import observe_fibonacci
-        fibonacci = observe_fibonacci(entry, side=side)
+        # The OTE retest must have been observable BEFORE the newest
+        # confirmation candle; avoid using the signal candle to satisfy
+        # its own prior-confluence condition.
+        fibonacci = observe_fibonacci(entry[:-1], side=side)
         if fibonacci is None or not fibonacci.recent_ote_retest:
             return None
     i = len(entry)-1
