@@ -25,6 +25,12 @@ O QUE JA FOI INTEGRADO NESTA MESMA PASTA
 - Calculadora ficticia de risco por instrumento, perda diaria, limite
   de exposicao, IDs duplicados, perda de conexao e botao de parada.
 - Adaptador MFP preliminar, ainda NAO homologado para API atual.
+- Previa de abertura e fechamento MT5 com SL/TP, lotes,
+  tick size e ticket da posicao: NAO TRANSMITE ORDENS.
+- Quando houver sinal SMC M5 recente, o monitor tentara calcular
+  perda ate stop e margem do LOTE MINIMO na conta DEMO via
+  funcoes de LEITURA do MT5. Dados inconsistentes bloqueiam.
+
 - Verificador XM DEMO em modo leitura para calculo nativo de perda
   ate o stop e margem na MOEDA DA CONTA (sem abrir ordens).
 - Verificador de cotacao com evidencia de horario conciliado;
@@ -43,7 +49,11 @@ COMO FUNCIONA A EXPERIENCIA UNICA DE TESTE
    (b) ciclo ficticio de BUY, STOP/ALVO,
    (c) dimensionamento de risco ficticio,
    (d) preflight com corretora falsa + reinicio/recuperacao de
-       intencoes, sem qualquer ordem enviada.
+       intencoes, sem qualquer ordem enviada,
+   (e) ciclo autonomo PAPER totalmente ficticio: risco, compra,
+       acompanhamento Bid/Ask, alvo/stop, duplicidade e reinicio,
+   (f) previa dos campos de abertura e fechamento MT5 para uma
+       posicao FICTICIA, sem transmitir solicitacoes.
    Se falhar, o processo interrompe o teste no primeiro erro.
 5. Nao precisa mais abrir tres testes diferentes.
 6. Quando e somente quando o pacote estiver apto a monitorar,
