@@ -19,6 +19,8 @@ from .lifecycle import PublishedSignal
 from .readiness import ReadinessReport, evaluate_readiness
 from .multi_timeframe import MultiTimeframeContext, observe_timeframes
 from .mtf_research import classify_signal_context
+from .demo_preflight import BrokerPreflightReport
+from .demo_signal_probe import probe_research_signal
 
 SYMBOL_RE = re.compile(r"^[A-Za-z0-9._#-]{1,40}$")
 
@@ -30,6 +32,7 @@ class MarketRow:
     error: str | None
     readiness: ReadinessReport | None = None
     timeframes: MultiTimeframeContext | None = None
+    signal_preflight: BrokerPreflightReport | None = None
 
 
 def read_symbol_list(path: str | Path) -> tuple[str, ...]:
@@ -73,7 +76,18 @@ def observe_one(mt5, symbol: str) -> MarketRow:
             trade_mode_full=getattr(mt5, "SYMBOL_TRADE_MODE_FULL", None),
             session_verified=False,
         )
-        return MarketRow(symbol, snap, None, readiness, timeframes)
+        signal_preflight = None
+        if snap.record is not None:
+            # Broker may change account or pricing between the market read
+            # and the read-only preflight. Fail this probe independently
+            # without losing the underlying SMC research observation.
+            try:
+                signal_preflight = probe_research_signal(
+                    mt5, snap.record, snap
+                )
+            except Exception:
+                signal_preflight = None
+        return MarketRow(symbol, snap, None, readiness, timeframes, signal_preflight)
     except Exception as exc:
         return MarketRow(symbol,None,str(exc).replace("\n"," ")[:160])
 
@@ -151,6 +165,28 @@ def render_market_table(rows: tuple[MarketRow, ...], now_iso: str) -> str:
             '(rótulo de pesquisa; NÃO é filtro nem previsão de lucratividade).</p>'
             if research_tag is not None else ""
         )
+        if signal is None:
+            probe_html = ""
+        elif row.signal_preflight is None:
+            probe_html = (
+                '<p>Pré-ordem de pesquisa: indisponível ou erro na avaliação. '
+                'Nenhuma ordem autorizada.</p>'
+            )
+        else:
+            pre=row.signal_preflight
+            blocks=', '.join(pre.blockers) if pre.blockers else "NENHUM"
+            currency=escape(pre.account_currency or "moeda desconhecida")
+            loss=(f"{pre.theoretical_loss_account_currency}"
+                  if pre.theoretical_loss_account_currency is not None else "—")
+            margin=(f"{pre.estimated_margin_account_currency}"
+                    if pre.estimated_margin_account_currency is not None else "—")
+            probe_html = (
+                '<h3>Pesquisa de risco da corretora — lote mínimo</h3>'
+                f'<p>Perda teórica até stop: {escape(loss)} {currency}; '
+                f'margem estimada: {escape(margin)} {currency}</p>'
+                f'<p>Bloqueios: {escape(blocks)}. '
+                'Sem envio de ordens e sem garantia de execução no stop.</p>'
+            )
         alert=('<p>Sem novo setup SMC confirmado.</p>' if signal is None else
                f'<p class="warning">APENAS PESQUISA — '
                f'{escape("COMPRA" if signal.side=="buy" else "VENDA")}: '
@@ -165,7 +201,7 @@ def render_market_table(rows: tuple[MarketRow, ...], now_iso: str) -> str:
             f'<div>H1<br><b>{escape(s.h1_bias)}</b></div></div>'
             f'<p>M5 fechado UTC: {escape(s.last_closed_m5_utc or "—")}</p>'
             f'<p>Deslocamento observado: {escape(s.clock_offset_label)}</p>'
-            f'{mtf_html}{fib}{research_html}{safety_html}{alert}</section>'
+            f'{mtf_html}{fib}{research_html}{safety_html}{probe_html}{alert}</section>'
         )
     return f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta http-equiv="refresh" content="30"><meta name="viewport"
@@ -239,6 +275,8 @@ def monitor_many(*, root: Path | None = None, once: bool = False,
                                     s.record.side, row.timeframes
                                 ).to_log() if s.record is not None
                                 and row.timeframes is not None else None,
+                                "signal_preflight_blocks":list(row.signal_preflight.blockers)
+                                    if row.signal_preflight is not None else None,
                                 "orders_sent":0
                             },ensure_ascii=False)+"\n")
                     if s.record is not None:
@@ -259,7 +297,10 @@ def monitor_many(*, root: Path | None = None, once: bool = False,
                                             if row.timeframes is not None else None,
                                         "mtf_signal_context":classify_signal_context(
                                             ev.side, row.timeframes
-                                        ).to_log() if row.timeframes is not None else None
+                                        ).to_log() if row.timeframes is not None else None,
+                                        "signal_preflight_blocks":list(row.signal_preflight.blockers)
+                                            if row.signal_preflight is not None else
+                                            ["SEM_PRECHECK_BROKER"]
                                     },ensure_ascii=False)+"\n")
                 _atomic_html(output,render_market_table(rows,now.isoformat()))
                 print(" | ".join(
