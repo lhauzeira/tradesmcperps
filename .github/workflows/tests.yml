@@ -16,6 +16,7 @@ on:
       - feature/mt5-live-clock-v10
       - feature/windows-crlf-fix-v11
       - feature/multiasset-fibonacci-v12
+      - feature/mt5-pretrade-readiness-v13
   pull_request:
     branches:
       - main
