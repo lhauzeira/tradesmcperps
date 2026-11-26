@@ -87,6 +87,7 @@ def rehearse_demo_preflight_recovery() -> dict[str, object]:
         generated_utc=(now-timedelta(seconds=1)).isoformat(),
         quote_time_utc=(now-timedelta(seconds=2)).isoformat(),
         quote_bid=100.0, quote_ask=100.2,
+        m5_atr_price=4.0,
         clock_offset_label="UTC+02:00 (observado agora, provisório)",
     )
     planned = DemoOrderHypothesis(
@@ -99,6 +100,8 @@ def rehearse_demo_preflight_recovery() -> dict[str, object]:
         raise AssertionError("Order gate failed to block")
     if "COTACAO_RECENTE_NAO_CONCILIADA" in report.blockers:
         raise AssertionError("Synthetic live-clock evidence was not recognized")
+    if "SPREAD_ELEVADO_RELATIVO_ATR" in report.blockers or "ATR_M5_NAO_CONFIRMADO" in report.blockers:
+        raise AssertionError("Expected valid synthetic M5 volatility evidence")
     if report.theoretical_loss_account_currency is None:
         raise AssertionError("Synthetic native risk calculation failed")
 
