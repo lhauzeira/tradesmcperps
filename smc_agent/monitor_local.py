@@ -19,7 +19,7 @@ import time
 import webbrowser
 
 from .alerts import SignalRecord, from_engine
-from .engine import analyze, macro_bias
+from .engine import analyze, macro_bias, atr_at
 from .fibonacci import FibonacciObservation, observe_fibonacci
 from .journal import SignalJournal
 from .lifecycle import PublishedSignal
@@ -60,6 +60,7 @@ class MonitorSnapshot:
     clock_offset_label: str = "NÃO VERIFICADO"
     fibonacci: FibonacciObservation | None = None
     price_digits: int = 2
+    m5_atr_price: float | None = None
     warning: str = "Somente pesquisa. Não operar com esses sinais."
 
 
@@ -150,6 +151,7 @@ def capture(adapter, *, now: datetime | None = None,
         age_last_m5_seconds=round(age, 1), record=record,
         clock_offset_label=clock.offset_label,
         fibonacci=fib, price_digits=digits,
+        m5_atr_price=atr_at(m5, len(m5) - 1),
         warning="Horário AO VIVO reconciliado com tick, M5 e H1: "
                 "não prova fuso histórico. SMC experimental, sem ordens, "
                 "custos, sessões históricas ou validação de resultado."
