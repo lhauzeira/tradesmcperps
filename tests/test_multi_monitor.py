@@ -109,6 +109,30 @@ class MultiMonitorTests(unittest.TestCase):
         self.assertIsNone(bad.snapshot)
         self.assertIsNotNone(gold.snapshot)
 
+    def test_unavailable_h4_does_not_silently_delete_original_h1_m5_signal(self):
+        # A multi-period cohort label must NEVER be a hidden trading filter.
+        from smc_agent.alerts import SignalRecord
+        from smc_agent import adapters
+        event=SignalRecord(
+            event_id="synthetic-mtf-001",symbol="GOLD",timeframe="M5",
+            candle_closed_at=BASE,side="buy",entry=100,stop=99,
+            target=102.5,rr=2.5,reason="synthetic",source="fixture"
+        )
+        snap=replace(snapshot("GOLD"),record=event)
+        mt5=FakeMT5()
+        class Adapter:
+            def __init__(self,symbol): self.symbol=symbol
+        with patch.object(adapters,"MT5Adapter",Adapter), \
+             patch("smc_agent.multi_monitor.capture",return_value=snap):
+            row=observe_one(mt5,"GOLD")
+        self.assertIs(row.snapshot.record,event)
+        self.assertIsNotNone(row.timeframes)
+        self.assertEqual(row.timeframes.available_count,0)
+        html=render_market_table((row,),BASE.isoformat())
+        self.assertIn("COBERTURA_INSUFICIENTE",html)
+        self.assertIn("SINAL",html.upper())
+        self.assertIn("Ordens enviadas: 0",html)
+
     def test_multi_panel_price_precision_and_local_only(self):
         html=render_market_table((
             MarketRow("GOLD",snapshot("GOLD",2),None),
