@@ -17,6 +17,7 @@ from .monitor_local import capture, check_demo_account, _atomic_html, _fmt_price
 from .journal import SignalJournal
 from .lifecycle import PublishedSignal
 from .readiness import ReadinessReport, evaluate_readiness
+from .multi_timeframe import MultiTimeframeContext, observe_timeframes
 
 SYMBOL_RE = re.compile(r"^[A-Za-z0-9._#-]{1,40}$")
 
@@ -27,6 +28,7 @@ class MarketRow:
     snapshot: object | None
     error: str | None
     readiness: ReadinessReport | None = None
+    timeframes: MultiTimeframeContext | None = None
 
 
 def read_symbol_list(path: str | Path) -> tuple[str, ...]:
@@ -59,8 +61,10 @@ def observe_one(mt5, symbol: str) -> MarketRow:
             raise RuntimeError("Precisão decimal não confirmada no MT5")
         # MT5Adapter is a lightweight wrapper over the same initialized MT5
         # module; it does not connect/shutdown per symbol.
-        snap = capture(MT5Adapter(symbol))
+        adapter = MT5Adapter(symbol)
+        snap = capture(adapter)
         snap = replace(snap, price_digits=digits)
+        timeframes = observe_timeframes(adapter, snap)
         # A trading-mode flag alone does NOT prove today's broker session
         # or holiday calendar. v0.13 intentionally keeps that check false.
         readiness = evaluate_readiness(
@@ -68,7 +72,7 @@ def observe_one(mt5, symbol: str) -> MarketRow:
             trade_mode_full=getattr(mt5, "SYMBOL_TRADE_MODE_FULL", None),
             session_verified=False,
         )
-        return MarketRow(symbol, snap, None, readiness)
+        return MarketRow(symbol, snap, None, readiness, timeframes)
     except Exception as exc:
         return MarketRow(symbol,None,str(exc).replace("\n"," ")[:160])
 
@@ -110,6 +114,32 @@ def render_market_table(rows: tuple[MarketRow, ...], now_iso: str) -> str:
                 '<p>Este diagnóstico NÃO libera ordens. '
                 'Sessões e feriados da corretora ainda não foram validados.</p>'
             )
+        if row.timeframes is None:
+            mtf_html = "<p>Leitura H4/H1/M30/M15/M5 ainda indisponível.</p>"
+        else:
+            summary = escape(row.timeframes.summary)
+            frame_rows = []
+            for frame in row.timeframes.frames:
+                label = escape(frame.bias)
+                state = escape(frame.state)
+                closed_time = escape(frame.last_closed_utc or "—")
+                detail = escape(frame.explanation) if frame.explanation else ""
+                frame_rows.append(
+                    f'<tr><td><b>{escape(frame.timeframe)}</b></td>'
+                    f'<td>{label}</td><td>{closed_time}</td>'
+                    f'<td>{state}{(" — " + detail) if detail else ""}</td></tr>'
+                )
+            mtf_html = (
+                f'<h3>Estrutura em cinco períodos</h3><p>{summary}</p>'
+                '<p class="note">Observacional: não altera o gatilho H1/M5 '
+                'nem autoriza uma ordem. Ausência de dados não significa '
+                'tendência neutra.</p>'
+                '<div class="table-scroll"><table><thead><tr>'
+                '<th>Período</th><th>Estrutura</th>'
+                '<th>Último fechamento UTC</th><th>Validação</th>'
+                '</tr></thead><tbody>' + ''.join(frame_rows)
+                + '</tbody></table></div>'
+            )
         signal = s.record
         alert=('<p>Sem novo setup SMC confirmado.</p>' if signal is None else
                f'<p class="warning">APENAS PESQUISA — '
@@ -125,7 +155,7 @@ def render_market_table(rows: tuple[MarketRow, ...], now_iso: str) -> str:
             f'<div>H1<br><b>{escape(s.h1_bias)}</b></div></div>'
             f'<p>M5 fechado UTC: {escape(s.last_closed_m5_utc or "—")}</p>'
             f'<p>Deslocamento observado: {escape(s.clock_offset_label)}</p>'
-            f'{fib}{safety_html}{alert}</section>'
+            f'{mtf_html}{fib}{safety_html}{alert}</section>'
         )
     return f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta http-equiv="refresh" content="30"><meta name="viewport"
@@ -139,6 +169,10 @@ margin:15px 0;padding:20px}}p{{color:#b5c9dd;line-height:1.6}}
 .grid div{{padding:12px;background:#101d2a;border-radius:9px}}
 b{{font-size:21px;color:#fff}}h1{{font-size:27px}}h2{{font-size:19px}}
 .error{{color:#ffad9d}}.warning{{color:#ffdd98;background:#3b2e1e;padding:10px}}
+h3{{font-size:17px;margin-top:22px}}.note{{font-size:13px}}
+.table-scroll{{overflow-x:auto}}table{{width:100%;border-collapse:collapse;font-size:13px}}
+th,td{{text-align:left;vertical-align:top;border-bottom:1px solid #37495d;padding:9px}}
+td b{{font-size:13px}}
 </style></head><body><main>
 <h1>SMC Trading Agent — Multiativos (DEMO)</h1>
 <p>Monitor local de leitura, sem ordens. Fibonacci é observacional e NÃO
@@ -189,6 +223,8 @@ def monitor_many(*, root: Path | None = None, once: bool = False,
                                 "signal":s.record is not None,
                                 "pretrade_blocks":list(row.readiness.block_codes)
                                     if row.readiness is not None else ["SEM_VERIFICACAO"],
+                                "multi_timeframe":row.timeframes.to_log()
+                                    if row.timeframes is not None else None,
                                 "orders_sent":0
                             },ensure_ascii=False)+"\n")
                     if s.record is not None:
