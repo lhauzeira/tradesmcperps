@@ -87,6 +87,9 @@ def observe_one(mt5, symbol: str) -> MarketRow:
                 )
             except Exception:
                 signal_preflight = None
+            # A switch away from XM DEMO during risk probing must NEVER
+            # be swallowed as a mere unavailable optional diagnostic.
+            check_demo_account(mt5.account_info(), mt5)
         return MarketRow(symbol, snap, None, readiness, timeframes, signal_preflight)
     except Exception as exc:
         return MarketRow(symbol,None,str(exc).replace("\n"," ")[:160])
