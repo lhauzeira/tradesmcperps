@@ -22,6 +22,7 @@ from .alerts import SignalRecord, from_engine
 from .engine import analyze, macro_bias
 from .journal import SignalJournal
 from .lifecycle import PublishedSignal
+from .live_clock import reconcile_live_clock
 
 EXPECTED_SERVER = "XMGlobal-MT5 5"
 M5_SECONDS = 300
@@ -55,6 +56,7 @@ class MonitorSnapshot:
     quote_time_utc: str | None = None
     age_last_m5_seconds: float | None = None
     record: SignalRecord | None = None
+    clock_offset_label: str = "NÃO VERIFICADO"
     warning: str = "Somente pesquisa. Não operar com esses sinais."
 
 
@@ -70,55 +72,51 @@ def capture(adapter, *, now: datetime, expected_server: str = EXPECTED_SERVER) -
     h1 = adapter.bars("H1", count=160)
     if len(m5) < 50 or len(h1) < 40:
         raise RuntimeError("Histórico fechado insuficiente. Abra GOLD M5/H1 no MT5.")
-    m5_close = m5[-1].time + timedelta(seconds=M5_SECONDS)
-    h1_close = h1[-1].time + timedelta(seconds=3600)
-    age = (now - m5_close.astimezone(timezone.utc)).total_seconds()
-    if age < -90:
-        # Do not silently subtract a presumed GMT+2/GMT+3. Some MT5 brokers
-        # report server-clock-like timestamps despite documented UTC semantics.
-        # Require read-only diagnosis before enabling new research signals.
-        raise RuntimeError(
-            "Candle M5 está cerca de "
-            f"{(-age / 3600):.2f} h à frente do UTC do PC. "
-            "Execute VERIFICAR_HORARIO_XM_DEMO.bat. "
-            "NÃO altere o relógio do Windows."
-        )
-    if (h1_close - now).total_seconds() > 90:
-        raise RuntimeError(
-            "Candle H1 também aparece no futuro. "
-            "Execute VERIFICAR_HORARIO_XM_DEMO.bat, sem forçar fusos."
-        )
-    if age > MAX_AGE_SECONDS:
-        state = "DADOS ANTIGOS — SEM SINAL ATIVO"
-        signal = None
-    else:
-        signal = analyze(h1, m5)
-        state = "SINAL DE PESQUISA — NÃO OPERAR" if signal else "AGUARDANDO SETUP SMC"
+    # The live demo terminal may return broker-clock-like raw timestamp
+    # integers; screenshot 2026-11-26 showed tick +02:00 vs PC UTC.
+    # Never force UTC+2 here: infer a candidate anew EACH scan and validate
+    # fresh tick + independently closed M5/H1. Historical June not inferred.
+    get_tick = getattr(adapter.mt5, "symbol_info_tick", None)
+    if not callable(get_tick):
+        raise RuntimeError("MT5 não forneceu leitura de tick GOLD; sem sinal")
+    tick = get_tick(adapter.symbol)
+    if tick is None:
+        raise RuntimeError("Último tick GOLD indisponível; sem sinal")
+    raw_tick_time = getattr(tick, "time", None)
+    raw_msc = getattr(tick, "time_msc", None)
+    if isinstance(raw_msc, (int, float)) and raw_msc > 0:
+        # If both timestamp fields exist, they must refer to the same
+        # instant; do not automatically privilege a contradictory field.
+        if not isinstance(raw_tick_time, (int, float)) or abs(raw_msc/1000 - raw_tick_time) > 2:
+            raise RuntimeError("Divergência entre time e time_msc do tick GOLD")
+        raw_tick_time = raw_msc / 1000
+
+    clock = reconcile_live_clock(
+        now=now, raw_tick_seconds=raw_tick_time,
+        raw_m5_open=m5[-1].time, raw_h1_open=h1[-1].time,
+    )
+    m5_close = clock.m5_closed_utc
+    h1_close = clock.h1_closed_utc
+    age = clock.m5_age_seconds
+
+    bid = ask = None
+    qbid, qask = getattr(tick, "bid", None), getattr(tick, "ask", None)
+    if (isinstance(qbid, (int, float)) and isinstance(qask, (int, float))
+            and 0 < qbid <= qask):
+        bid, ask = float(qbid), float(qask)
+
+    # These candles are only used for their shapes and chronological
+    # ordering in the SMC engine; older bar timezones are NOT rewritten
+    # by the live observed offset (seasonal transitions may exist).
+    signal = analyze(h1, m5)
+    state = "SINAL DE PESQUISA — NÃO OPERAR" if signal else "AGUARDANDO SETUP SMC"
 
     bias = macro_bias(h1)
     bias_text = "ALTA" if bias > 0 else "BAIXA" if bias < 0 else "NEUTRO"
     record = (from_engine(signal, symbol=adapter.symbol, timeframe="M5",
-                          candle_closed_at=m5_close, source="xm-demo-smc-v08")
+                          candle_closed_at=m5_close,
+                          source="xm-demo-smc-v10-observed-live-clock")
               if signal is not None else None)
-
-    bid = ask = tick_at = None
-    get_tick = getattr(adapter.mt5, "symbol_info_tick", None)
-    if callable(get_tick):
-        tick = get_tick(adapter.symbol)
-        if tick is not None:
-            b, a = getattr(tick, "bid", None), getattr(tick, "ask", None)
-            if (isinstance(b, (int, float)) and isinstance(a, (int, float))
-                    and 0 < b <= a):
-                bid, ask = float(b), float(a)
-            timestamp = getattr(tick, "time", None)
-            if isinstance(timestamp, (int, float)) and timestamp > 0:
-                tick_time = datetime.fromtimestamp(timestamp, timezone.utc)
-                if (tick_time - now).total_seconds() > 90:
-                    raise RuntimeError(
-                        "Tick GOLD também aparece à frente do UTC do PC. "
-                        "Execute VERIFICAR_HORARIO_XM_DEMO.bat."
-                    )
-                tick_at = tick_time.isoformat()
 
     return MonitorSnapshot(
         generated_utc=now.isoformat(), symbol=adapter.symbol,
@@ -126,10 +124,12 @@ def capture(adapter, *, now: datetime, expected_server: str = EXPECTED_SERVER) -
         last_closed_m5_utc=m5_close.isoformat(),
         last_closed_h1_utc=h1_close.isoformat(),
         last_m5_bid_close=m5[-1].close, h1_bias=bias_text,
-        quote_bid=bid, quote_ask=ask, quote_time_utc=tick_at,
+        quote_bid=bid, quote_ask=ask, quote_time_utc=clock.tick_utc.isoformat(),
         age_last_m5_seconds=round(age, 1), record=record,
-        warning="Motor SMC experimental. Sem avaliação histórica de desempenho, "
-                "sem validação de sessão, custos ou execução; NÃO OPERAR."
+        clock_offset_label=clock.offset_label,
+        warning="Horário AO VIVO reconciliado com tick, M5 e H1: "
+                "não prova fuso histórico. SMC experimental, sem ordens, "
+                "custos, sessões históricas ou validação de resultado."
     )
 
 
@@ -200,6 +200,11 @@ a{{color:#a9d2ff}}.footer{{font-size:13px;color:#90a5b7}}
 </div><p>Último candle M5 fechado: {_plain(snapshot.last_closed_m5_utc or '—')}<br>
 Fechamento Bid M5: {_fmt_price(snapshot.last_m5_bid_close)}<br>
 Última cotação reportada: {_plain(snapshot.quote_time_utc or 'indisponível')}</p></div>
+<div class="card"><h2>Horários do MT5 — apenas pesquisa ao vivo</h2>
+<p>Diferença observada nesta leitura: <b>{_plain(snapshot.clock_offset_label)}</b></p>
+<p>Isso não prova o fuso de junho nem confirma horários históricos. Cada leitura
+é validada novamente com tick, M5 e H1. Se houver divergência, o monitor pausa.
+Não altere o relógio do computador.</p></div>
 <div class="card"><h2>Análise SMC (experimental)</h2>{signal_section}</div>
 <div class="card"><h2>Segurança e funcionamento</h2>
 <p>Somente dados de mercado e análises locais. Ordens enviadas: <b>0</b>.
