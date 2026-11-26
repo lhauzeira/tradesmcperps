@@ -212,6 +212,9 @@ class MonitorTests(unittest.TestCase):
                  patch("smc_agent.monitor_local.webbrowser.open") as open_tab, \
                  patch("smc_agent.monitor_local.datetime") as clock:
                 clock.now.return_value = NOW
+                # The monitor now validates tick timestamps too; preserve
+                # real epoch decoding while injecting a deterministic clock.
+                clock.fromtimestamp.side_effect = datetime.fromtimestamp
                 monitor(once=True, folder=Path(root))
             self.assertTrue((Path(root) / "MONITOR_LOCAL_DEMO.html").exists())
             self.assertTrue((Path(root) / "monitoramento_privado" /
