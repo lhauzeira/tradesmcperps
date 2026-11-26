@@ -65,20 +65,31 @@ class ResearchOrderIntent:
 
 STATES = frozenset((
     "PREPARED_RESEARCH", "SIMULATED_SEND_UNKNOWN",
-    "RECONCILE_REQUIRED", "BLOCKED_RESEARCH", "RESOLVED_NO_ORDER"
+    "RECONCILE_REQUIRED", "BLOCKED_RESEARCH", "RESOLVED_NO_ORDER",
+    "PAPER_POSITION_OPEN", "SIMULATED_TARGET_OBSERVED",
+    "SIMULATED_STOP_OBSERVED", "SIMULATED_GAP_INCONCLUSIVE"
 ))
 
 _ALLOWED_TRANSITIONS = {
     "PREPARED_RESEARCH": frozenset((
         "SIMULATED_SEND_UNKNOWN", "BLOCKED_RESEARCH",
-        "RESOLVED_NO_ORDER", "RECONCILE_REQUIRED"
+        "RESOLVED_NO_ORDER", "RECONCILE_REQUIRED",
+        "PAPER_POSITION_OPEN",
     )),
+    "PAPER_POSITION_OPEN": frozenset((
+        "SIMULATED_TARGET_OBSERVED", "SIMULATED_STOP_OBSERVED",
+        "SIMULATED_GAP_INCONCLUSIVE", "RECONCILE_REQUIRED",
+    )),
+    "SIMULATED_TARGET_OBSERVED": frozenset(),
+    "SIMULATED_STOP_OBSERVED": frozenset(),
+    "SIMULATED_GAP_INCONCLUSIVE": frozenset(),
     "SIMULATED_SEND_UNKNOWN": frozenset(("RECONCILE_REQUIRED",)),
     "RECONCILE_REQUIRED": frozenset(("RESOLVED_NO_ORDER",)),
     "BLOCKED_RESEARCH": frozenset(),
     "RESOLVED_NO_ORDER": frozenset(),
 }
-_UNRESOLVED = ("PREPARED_RESEARCH", "SIMULATED_SEND_UNKNOWN")
+_UNRESOLVED = ("PREPARED_RESEARCH", "SIMULATED_SEND_UNKNOWN",
+               "PAPER_POSITION_OPEN")
 
 
 class ResearchIntentJournal:
@@ -205,7 +216,7 @@ class ResearchIntentJournal:
         try:
             rows=self.db.execute(
                 "SELECT event_id,last_updated_utc FROM research_intents "
-                "WHERE status IN (?,?)",_UNRESOLVED
+                "WHERE status IN (?,?,?)",_UNRESOLVED
             ).fetchall()
             for event_id,last in rows:
                 if stamp < last:
