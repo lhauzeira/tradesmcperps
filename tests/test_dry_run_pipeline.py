@@ -13,6 +13,8 @@ class DemoPipelineRehearsalTests(unittest.TestCase):
         self.assertEqual(result["orders_sent"],0)
         self.assertEqual(result["intent_after_restart"],"RECONCILE_REQUIRED")
         self.assertTrue(result["duplicate_prevented"])
+        self.assertEqual(result["timeout_policy"],"QUARENTENA")
+        self.assertFalse(result["automatic_retry_allowed"])
         self.assertIn("SESSOES_FERIADOS_NAO_VERIFICADOS",
                       result["broker_blockers"])
         self.assertIn("EXECUCAO_DE_ORDENS_DESABILITADA",
