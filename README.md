@@ -22,6 +22,26 @@ Sessões/feriados e execução continuam bloqueados. O custo extra
 em caso de gap, slippage ou falha do broker. A estimativa de margem
 não é uma decisão de crédito da corretora.
 
+**smc_agent/fake_broker_replies.py** — modela respostas
+**COMPLETAMENTE FICTÍCIAS** de execução total, parcial, rejeição,
+timeout e resposta desconhecida. Não considera qualquer uma delas
+um fill real, não permite retry automático e coloca respostas
+desconhecidas/contraditórias em quarentena para reconciliação.
+
+**smc_agent/dry_run_pipeline.py** — ensaio integrado usando uma
+corretora falsa, um comprovante fictício de cotação, estimativas
+fictícias de risco, um timeout simulado e o diário SQLite.
+O teste confirma que o sinal continua impedido de ser reenviado
+depois de reiniciar. Não importa o MetaTrader5 e não envia ordens.
+
+**smc_agent/demo_diagnostics.py** — inventário sanitizado
+de especificações reais dos instrumentos listados em ATIVOS_DEMO.txt,
+somente se a conta atual for XMGlobal-MT5 5 DEMO. Pode apresentar
+volume mínimo/passo, tick size/value, precisão, modo de negociação
+e Bid/Ask. NÃO devolve login, saldo, patrimônio ou posições; não
+é confirmação de abertura de sessão. No menu ABRIR_SMC_AGENT.bat,
+opção 4 abre este diagnóstico somente leitura; opção 5 sai.
+
 **smc_agent/order_intent_journal.py** — diário SQLite de INTENÇÕES DE
 PESQUISA, separado das posições reais. Protege o ID do sinal contra
 duplicidade após reinício, verifica que os parâmetros não mudaram e
@@ -30,8 +50,10 @@ A função de quarentena deverá ser chamada obrigatoriamente na
 inicialização do eventual executor autorizado. Ela **não** confirma
 nenhum fill ou ordem executada.
 
-Esses componentes serão exercitados com corretora totalmente falsa
-dentro dos testes offline do ABRIR_SMC_AGENT.bat, opção 1.
+Os ensaios de corretora falsa são exercitados na opção 1
+de ABRIR_SMC_AGENT.bat, incluindo tratamento de timeout. O diagnóstico
+da opção 4, diferentemente do ensaio, lê dados da sua conta XM DEMO,
+mas nunca envia ou altera ordens.
 Eles ainda não estão acoplados a um executor real; não acrescente
 nenhuma configuração que habilite envio de ordens na RC1.
 
