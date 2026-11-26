@@ -41,6 +41,15 @@ operar. Em código, ReadinessReport.can_submit_orders é sempre False.
 Mesmo com todas as cotações coerentes, um teste adicional de sessão
 verificada não equivale a autorização para operar.
 
+O segundo módulo experimental da v0.13 é
+smc_agent/paper_execution.py (SIMULAR_CICLO_PAPER_OFFLINE.bat). Ele
+ensaiará apenas em **dados completamente inventados** a abertura por Ask
+na compra / Bid na venda, o fechamento do lado oposto da cotação, stop,
+alvo, rejeição de ID duplicado e impossibilidade de decidir um resultado
+quando os ticks são insuficientes. O resultado é em unidades de PREÇO,
+**não** em dinheiro. Não está ligado ao monitor e não é backtest
+real nem execução em conta XM.
+
 Próximos marcos antes de qualquer ordem demo: contrato real por símbolo,
 horários especiais de cada CFD, risco/tamanho com moeda da conta e
 margem, simulador de estados/rejeições/duplicidade, kill switch, teste
