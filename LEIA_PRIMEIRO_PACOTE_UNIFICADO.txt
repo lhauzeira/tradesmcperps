@@ -9,7 +9,13 @@ IMPORTANTE: ESTA CANDIDATA AINDA NAO ABRE NEM FECHA ORDENS.
 ==============================================================
 
 O QUE JA FOI INTEGRADO NESTA MESMA PASTA
-- Analise SMC H1/M5 e sinais de pesquisa.
+- Analise SMC H1/M5 e sinais de pesquisa (mesmo gatilho, sem ordens).
+- Estrutura confirmada H4, H1, M30, M15 e M5 por ativo.
+- Diagnostico dos cinco periodos com ultimo fechamento UTC;
+  periodo sem dados e marcado INDISPONIVEL, nao NEUTRO.
+- Confluencia de H4 e dos intermediarios M30/M15 registrada como
+  rotulo de pesquisa em cada sinal. Ainda NAO filtra sinais
+  nem comprova maior taxa de acerto.
 - Fibonacci 50%, 61,8%, 70,5%, 78,6%, zona OTE experimental.
 - Monitor multiativos XM MT5, somente conta demo e sem ordens.
 - Reconciliação provisoria de relogios por tick, M5 e H1.
