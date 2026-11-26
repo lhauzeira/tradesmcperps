@@ -12,6 +12,29 @@ A proof-of-concept that transforms selected Smart Money Concepts (SMC) rules int
 
 This is a compact implementation. Additional experiments with ATR-confirmed ZigZag, liquidity and volume confluences are maintained separately and still need to be reconciled.
 
+## Diagnóstico de horário XM / MT5 (v0.9 em revisão)
+
+A primeira integração na conta DEMO revelou um alerta legítimo de segurança:
+o timestamp do último candle M5 parece estar **no futuro** em relação
+ao horário UTC informado pelo computador. Ainda não está claro se a causa
+é a convenção de tempo do servidor XM, o sistema operacional ou a
+interpretação da API Python.
+
+**Não desative o bloqueio e não force GMT+3.**
+
+Com o MetaTrader 5 aberto na conta DEMO, rode por duplo clique
+`VERIFICAR_HORARIO_XM_DEMO.bat`. O script compara apenas os tempos
+brutos de M5, H1 e tick com o relógio do computador e os imprime para
+diagnóstico, sem exibir número de conta ou saldo. Os horários exibidos
+como UTC são **interpretações provisórias** dos valores retornados, não
+confirmação do fuso real.
+
+O monitor também passa a indicar explicitamente o provável problema
+de comparação de horários e continua recusando novos sinais enquanto
+o horário não for validado. Uma futura correção de fuso deverá ser
+evidenciada em amostras atuais e históricas, sem alterar indevidamente
+o horário de publicação dos sinais.
+
 ## Teste prático no Windows com MT5 / conta DEMO (v0.8 em revisão)
 
 O experimento agora tem um **monitor local** para o ouro da XMGlobal-MT5 5.
