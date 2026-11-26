@@ -201,8 +201,11 @@ def calculate_hypothetical_size(
     entry = dec(intent.ask if intent.side == "buy" else intent.bid, "entry")
     stop = dec(intent.stop, "stop")
     tick = dec(contract.tick_size, "tick_size")
-    # Stop is submitted at tick increments; a fractional stop level must
-    # not silently be rounded closer and understate loss.
+    # Validate independent bid/ask and stop against the instrument's own
+    # tick grid; never round a hypothetical executable quote silently.
+    if any(q / tick != (q / tick).to_integral_value() for q in (
+            dec(intent.bid, "bid"), dec(intent.ask, "ask"))):
+        return blocked(["COTACAO_FORA_TICK_SIZE"])
     if stop / tick != (stop / tick).to_integral_value():
         return blocked(["STOP_FORA_TICK_SIZE"])
     stop_distance = abs(entry - stop)
