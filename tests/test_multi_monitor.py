@@ -103,6 +103,9 @@ class MultiMonitorTests(unittest.TestCase):
             gold=observe_one(fake,"GOLD")
         self.assertIsNotNone(euro.snapshot)
         self.assertEqual(euro.snapshot.price_digits,5)
+        self.assertIsNotNone(euro.readiness)
+        self.assertIn("SESSAO_OU_FERIADO_NAO_VERIFICADO",euro.readiness.block_codes)
+        self.assertFalse(euro.readiness.can_submit_orders)
         self.assertIsNone(bad.snapshot)
         self.assertIsNotNone(gold.snapshot)
 
@@ -119,6 +122,24 @@ class MultiMonitorTests(unittest.TestCase):
         self.assertIn("Ativo não encontrado",html)
         self.assertNotIn("https://",html)
         self.assertNotIn("http://",html)
+        self.assertIn("Ordens enviadas: 0",html)
+
+    def test_readiness_blocked_state_rendered_individually_for_each_market(self):
+        from smc_agent.readiness import ReadinessReport
+        blocked=ReadinessReport(
+            symbol="GOLD",status="BLOQUEADO_PARA_EXECUCAO",
+            block_codes=("SESSAO_OU_FERIADO_NAO_VERIFICADO",),
+            tick_age_seconds=2.0,spread_to_m5_atr=0.15,
+            session_verified=False
+        )
+        html=render_market_table((
+            MarketRow("GOLD",snapshot("GOLD"),None,blocked),
+            MarketRow("US100Cash",None,"Mercado sem cotação",None),
+        ),BASE.isoformat())
+        self.assertIn("Portão de execução",html)
+        self.assertIn("SESSAO_OU_FERIADO_NAO_VERIFICADO",html)
+        self.assertIn("15.0%",html)
+        self.assertIn("Mercado sem cotação",html)
         self.assertIn("Ordens enviadas: 0",html)
 
     def test_multi_safe_html_escaping(self):
