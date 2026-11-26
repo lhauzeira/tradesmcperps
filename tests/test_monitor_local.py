@@ -83,6 +83,33 @@ class MonitorTests(unittest.TestCase):
         self.assertIsNone(result.record)
         self.assertTrue(result.connected_to_demo)
 
+    def test_broker_clock_appearing_three_hours_ahead_is_blocked(self):
+        # User's real terminal showed this symptom. Do not 'fix' by
+        # subtracting GMT+3 unless its provenance is independently verified.
+        fake = FakeAdapter()
+        original_bars = fake.bars
+        def future_bars(timeframe, count):
+            return [Candle(
+                x.time+timedelta(hours=3), x.open, x.high,
+                x.low, x.close, x.tick_volume)
+                for x in original_bars(timeframe, count)]
+        fake.bars = future_bars
+        with patch("smc_agent.monitor_local.analyze") as analyze:
+            with self.assertRaisesRegex(RuntimeError, "VERIFICAR_HORARIO_XM_DEMO"):
+                capture(fake, now=NOW)
+        analyze.assert_not_called()
+
+    def test_future_tick_is_blocked_before_signal_record(self):
+        fake = FakeAdapter()
+        original_tick = fake.mt5.symbol_info_tick
+        def future_tick(symbol):
+            tick = original_tick(symbol)
+            tick.time += 3*3600
+            return tick
+        fake.mt5.symbol_info_tick = future_tick
+        with self.assertRaisesRegex(RuntimeError, "Tick GOLD"):
+            capture(fake, now=NOW)
+
     def test_old_m5_candle_never_reemitted_as_active_signal(self):
         old = NOW+timedelta(minutes=25)
         with patch("smc_agent.monitor_local.analyze") as spy:
