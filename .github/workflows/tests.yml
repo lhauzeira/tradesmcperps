@@ -19,6 +19,7 @@ on:
       - feature/mt5-pretrade-readiness-v13
       - feature/multiasset-risk-guard-v14
       - release/smc-unificado-rc1
+  workflow_dispatch:
   pull_request:
     branches:
       - main
@@ -46,19 +47,5 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Run offline unit tests
-        run: python -m unittest discover -s tests -v
-      - name: Run offline Builder demo
-        run: python -m smc_agent.demo
-      - name: Run synthetic alert preview
-        run: python -m smc_agent.alert_demo
-      - name: Run synthetic lifecycle and SQLite journal demo
-        run: python -m smc_agent.lifecycle_demo
-      - name: Run synthetic bid-ask quote feed demo
-        run: python -m smc_agent.quote_demo
-      - name: Run synthetic XM GOLD risk calculation demo
-        run: python -m smc_agent.xm_gold_risk
-      - name: Run fabricated session-aware paper replay
-        run: python -m smc_agent.paper_demo
-      - name: Print XM session screenshot snapshot without assuming historical times
-        run: python -m smc_agent.xm_calendar
+      - name: Validate unified offline suite and six fictitious scenarios
+        run: python -m smc_agent.unified --validar-tudo
