@@ -17,6 +17,7 @@ on:
       - feature/windows-crlf-fix-v11
       - feature/multiasset-fibonacci-v12
       - feature/mt5-pretrade-readiness-v13
+      - feature/multiasset-risk-guard-v14
   pull_request:
     branches:
       - main
