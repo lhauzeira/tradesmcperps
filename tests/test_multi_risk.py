@@ -177,6 +177,13 @@ class MultiAssetResearchRiskTests(unittest.TestCase):
         )
         self.assertEqual(out.block_codes,("STOP_FORA_TICK_SIZE",))
 
+    def test_non_aligned_bid_or_ask_cannot_be_used_as_entry(self):
+        out=calculate_hypothetical_size(
+            intent(bid=D("100.001")),contract(),limits()
+        )
+        self.assertEqual(out.block_codes,("COTACAO_FORA_TICK_SIZE",))
+        self.assertIsNone(out.research_lots)
+
     def test_nonmultiple_minimum_uses_min_plus_steps(self):
         out=calculate_hypothetical_size(
             intent(),contract(volume_min=D(".01"),volume_step=D(".003")),limits()
