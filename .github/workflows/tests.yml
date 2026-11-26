@@ -10,6 +10,7 @@ on:
       - feature/native-quotes-v04
       - feature/xm-gold-risk-v05
       - feature/offline-paper-v06
+      - feature/xm-gold-calendar-v07
   pull_request:
     branches:
       - main
@@ -17,6 +18,7 @@ on:
       - feature/signal-lifecycle-v03
       - feature/native-quotes-v04
       - feature/xm-gold-risk-v05
+      - feature/offline-paper-v06
 
 permissions:
   contents: read
@@ -45,3 +47,5 @@ jobs:
         run: python -m smc_agent.xm_gold_risk
       - name: Run fabricated session-aware paper replay
         run: python -m smc_agent.paper_demo
+      - name: Print XM session screenshot snapshot without assuming historical times
+        run: python -m smc_agent.xm_calendar

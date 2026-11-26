@@ -7,12 +7,15 @@ price-boundary events under an explicit simulation policy.
 
 ## Why trading sessions matter
 
-Your broker can publish prices before or after it accepts orders. The MT5
-GOLD instrument screenshot showed **Monday only**:
-quotations 01:00–23:59 and trading 01:02–23:58 in the terminal clock.
-We do not know the remaining weekdays from that screenshot, and we have
-not independently verified whether exported historical ticks use the
-same server clock.
+Your broker can publish prices before or after it accepts orders. A second
+MT5 GOLD specification screenshot (2026-11-25) confirms *current displayed*
+trading hours of **01:02–23:58 Monday through Friday** on the terminal clock,
+with quotation hours 01:00–23:59 Monday through Thursday and
+01:00–23:58 on Friday. Saturday and Sunday show no sessions.
+
+The observed schedule is stored separately in smc_agent/xm_calendar.py.
+However, we have NOT verified that these displayed times applied to the
+historical June tick export, or what UTC offset the export uses.
 
 For this reason, v0.6 deliberately does NOT invent a Tuesday–Friday
 calendar, does NOT guess the XM historical server UTC offset and does

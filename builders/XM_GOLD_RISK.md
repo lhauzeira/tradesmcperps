@@ -25,10 +25,28 @@ or investment recommendation.** Instrument specifications may change.
 | Price shown on chart | Bid |
 | Execution type | Market |
 
-**Displayed Monday session only:** quotations 01:00–23:59 and trading
-01:02–23:58 on the platform/server clock. The screenshots do **not**
-establish Tuesday–Sunday hours, the historical June GMT offset, or the
-exact applicability of the current swap figures to past positions.
+**Updated screenshot (2026-11-25):** the MT5 GOLD specification shows
+the following current displayed sessions in the terminal/server clock:
+
+| Day | Quotation hours | Trading hours |
+|---|---|---|
+| Monday | 01:00–23:59 | 01:02–23:58 |
+| Tuesday | 01:00–23:59 | 01:02–23:58 |
+| Wednesday | 01:00–23:59 | 01:02–23:58 |
+| Thursday | 01:00–23:59 | 01:02–23:58 |
+| Friday | 01:00–23:58 | 01:02–23:58 |
+| Saturday/Sunday | No sessions displayed | No sessions displayed |
+
+The current screenshot does **not** establish the historical June GMT
+offset, nor prove historical trading sessions were identical. Session
+endpoints are treated conservatively in code as *exclusive*, so we never
+assume the final displayed minute was completely executable. Swap
+figures are likewise an observed current snapshot, not verified historical rates.
+
+The lower part of the screenshot also displays indicative margin-per-lot
+amounts near USD 358 for buy and sell at that moment. These are dynamic,
+incomplete margin indications, **not** a static broker margin requirement.
+Do not use them as a fixed value in a historical position-sizing model.
 
 The minimum lot is **0.01**, whereas the step is **0.001**. Therefore
 0.011 is a mathematically valid volume given these two settings, while
