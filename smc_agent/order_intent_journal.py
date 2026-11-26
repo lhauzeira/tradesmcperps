@@ -118,6 +118,13 @@ class ResearchIntentJournal:
             note TEXT NOT NULL,
             FOREIGN KEY(event_id) REFERENCES research_intents(event_id)
         )""")
+        # An existing unresolved entry on connection startup means we
+        # cannot assume the previous session ended cleanly. A new signal
+        # must not be accepted before explicit restart quarantine.
+        self._restart_guard = bool(self.db.execute(
+            "SELECT 1 FROM research_intents WHERE status IN (?,?,?) LIMIT 1",
+            _UNRESOLVED
+        ).fetchone())
 
     def __enter__(self):
         return self
@@ -143,6 +150,14 @@ class ResearchIntentJournal:
                     raise ValueError("ID de intenção reutilizado com parâmetros diferentes")
                 self.db.execute("COMMIT")
                 return False
+            if self._restart_guard or self.db.execute(
+                "SELECT 1 FROM research_intents "
+                "WHERE status='RECONCILE_REQUIRED' LIMIT 1"
+            ).fetchone():
+                raise RuntimeError(
+                    "Novas intenções BLOQUEADAS: reconciliação pendente "
+                    "ou inicialização incompleta após reinício"
+                )
             self.db.execute(
                 """INSERT INTO research_intents
                 (event_id,venue,symbol,side,volume,stop,target,
@@ -232,10 +247,20 @@ class ResearchIntentJournal:
                      "Reinício: não repetir envio sem reconciliação")
                 )
             self.db.execute("COMMIT")
+            # Explicit quarantine completed. Entries now remain
+            # RECONCILE_REQUIRED and will block new IDs until resolved.
+            self._restart_guard = False
             return len(rows)
         except Exception:
             self.db.execute("ROLLBACK")
             raise
+
+    def pending_reconciliation_count(self) -> int:
+        """The number of quarantined research intents blocking new signals."""
+        return self.db.execute(
+            "SELECT COUNT(*) FROM research_intents "
+            "WHERE status='RECONCILE_REQUIRED'"
+        ).fetchone()[0]
 
     def counts(self) -> dict[str,int]:
         return dict(self.db.execute(
