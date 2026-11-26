@@ -90,6 +90,8 @@ class BrokerNativeDemoPreflightTests(unittest.TestCase):
         self.assertEqual(report.number_pending_orders,0)
         self.assertEqual(report.blockers,(
             "SESSOES_FERIADOS_NAO_VERIFICADOS",
+            "CUSTOS_REAIS_E_SLIPPAGE_NAO_VERIFICADOS",
+            "PERDA_DIARIA_REAL_NAO_RECONCILIADA",
             "EXECUCAO_DE_ORDENS_DESABILITADA",
             "COTACAO_RECENTE_NAO_CONCILIADA",
         ))
