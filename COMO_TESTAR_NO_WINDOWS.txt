@@ -33,6 +33,18 @@ PASSO 3 — INICIAR
 • Deixe a janela preta do monitor aberta enquanto quiser acompanhar.
   A página atualiza sozinha a cada 30 segundos.
 
+SE O MONITOR INFORMAR "CANDLE NO FUTURO" OU "VERIFICAR HORARIO"
+• Não mexa no relógio do Windows nem no MT5.
+• Pare o monitor anterior com Ctrl+C.
+• Extraia a pasta completa da branch atualizada (v0.9).
+• Com o MT5 aberto na mesma conta DEMO, dê dois cliques em:
+    VERIFICAR_HORARIO_XM_DEMO.bat
+• Ele mostrará horário UTC do PC e horários BRUTOS do M5, H1 e tick
+  interpretados provisoriamente como UTC, além das diferenças em horas.
+• Envie SOMENTE a janela deste diagnóstico, sem login, senha ou conta.
+• Nenhuma alteração de horário será feita sem primeiro avaliar a origem
+  do desvio. Não usaremos a suposição GMT+3 automaticamente.
+
 PASSO 4 — INTERPRETAR
 "AGUARDANDO SETUP SMC":
   a metodologia experimental não identificou um sinal novo neste candle.
