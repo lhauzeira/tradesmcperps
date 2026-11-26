@@ -7,7 +7,6 @@ brokerage execution. The computed minimum is NOT a proposed live order.
 """
 from __future__ import annotations
 
-from dataclasses import replace
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any
@@ -80,7 +79,7 @@ def probe_research_signal(
     elif atr is not None:
         reference=ask if signal.side=="buy" else bid
         if abs(reference-Decimal(str(signal.entry)))>atr*Decimal("0.50"):
-            blockers.append("PRECO_DISTANTE_DA_ENTRADA_TEO RICA".replace(" ","_"))
+            blockers.append("PRECO_DISTANTE_DA_ENTRADA_TEORICA")
     if blockers:
         return _blocked(signal,tuple(blockers))
 
