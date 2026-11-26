@@ -27,12 +27,19 @@ class UnifiedLauncherTests(unittest.TestCase):
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertIn("--validar-tudo",result.stdout)
         self.assertIn("--monitor-demo",result.stdout)
+        self.assertIn("--diagnostico-demo",result.stdout)
 
     def test_mocked_demo_mode_routes_to_read_only_monitor(self):
         with patch("smc_agent.multi_monitor.monitor_many") as spy:
             code=main(["--monitor-demo","--intervalo","45"])
         self.assertEqual(code,0)
         spy.assert_called_once_with(interval=45)
+
+    def test_mocked_diagnostics_mode_uses_read_only_inventory(self):
+        with patch("smc_agent.demo_diagnostics.diagnose_open_demo") as scan:
+            code=main(["--diagnostico-demo"])
+        self.assertEqual(code,0)
+        scan.assert_called_once_with()
 
     def test_validation_runs_suite_then_three_synthetic_examples(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -65,7 +72,8 @@ class UnifiedLauncherTests(unittest.TestCase):
         script=(root/"ABRIR_SMC_AGENT.bat").read_bytes()
         self.assertTrue(script.startswith(b"@echo off\r\n"))
         self.assertEqual(script.count(b"\n"),script.count(b"\r\n"))
-        self.assertIn(b"choice /C 1234",script)
+        self.assertIn(b"choice /C 12345",script)
+        self.assertIn(b"py -3.11 -m smc_agent.unified --diagnostico-demo",script)
         self.assertIn(b"py -3.11 -m smc_agent.unified --validar-tudo",script)
         self.assertIn(b"py -3.11 -m smc_agent.unified --monitor-demo",script)
 
