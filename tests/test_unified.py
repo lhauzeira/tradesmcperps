@@ -41,13 +41,13 @@ class UnifiedLauncherTests(unittest.TestCase):
         self.assertEqual(code,0)
         scan.assert_called_once_with()
 
-    def test_validation_runs_suite_then_five_synthetic_examples(self):
+    def test_validation_runs_suite_then_six_synthetic_examples(self):
         with tempfile.TemporaryDirectory() as folder:
             with patch("smc_agent.unified.subprocess.run") as run:
                 run.return_value.returncode=0
                 code=validate_all(root=Path(folder))
         self.assertEqual(code,0)
-        self.assertEqual(run.call_count,6)
+        self.assertEqual(run.call_count,7)
         cmds=[x.args[0] for x in run.call_args_list]
         self.assertIn("unittest",cmds[0])
         self.assertIn("smc_agent.paper_execution",cmds[1])
@@ -55,6 +55,7 @@ class UnifiedLauncherTests(unittest.TestCase):
         self.assertIn("smc_agent.dry_run_pipeline",cmds[3])
         self.assertIn("smc_agent.paper_orchestrator",cmds[4])
         self.assertIn("smc_agent.mt5_request_preview",cmds[5])
+        self.assertIn("smc_agent.session_calendar",cmds[6])
 
     def test_failed_tests_abort_before_any_paper_or_risk_example(self):
         with tempfile.TemporaryDirectory() as folder:
