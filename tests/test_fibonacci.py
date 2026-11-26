@@ -125,6 +125,46 @@ class FibonacciTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             obs.ob_overlaps_ote(101,99)
 
+    def test_optional_filter_accepts_only_confirmed_ote_plus_ob_overlap(self):
+        from smc_agent.engine import OrderBlock
+        from unittest.mock import patch
+        macro=[Candle(START+timedelta(hours=i),100,101,99,100)
+               for i in range(55)]
+        entry=[Candle(START+timedelta(minutes=5*i),100,101,99,100)
+               for i in range(70)]
+        entry[-1]=Candle(entry[-1].time,100,104,99,103)
+        z=OrderBlock("buy",97.5,102.0,60,62)
+        fib=FibonacciObservation(
+            side="buy",from_index=12,to_index=23,confirmed_at=25,
+            start_price=90,end_price=110,
+            price_50=100,price_618=97.64,price_705=95.9,
+            price_786=94.28,zone_low=94.28,zone_high=97.64,
+            latest_close=96,status="RETESTE_RECENTE_OTE"
+        )
+        with patch("smc_agent.engine.macro_bias",return_value=1), \
+             patch("smc_agent.engine.order_blocks",return_value=[z]), \
+             patch("smc_agent.fibonacci.observe_fibonacci",return_value=fib) as obs:
+            result=analyze(macro,entry,require_fibonacci=True)
+            self.assertIsNotNone(result)
+            self.assertIn("Fibonacci",result.reason)
+            obs.assert_called_once()
+            self.assertEqual(len(obs.call_args.args[0]),len(entry)-1)
+
+        missing=FibonacciObservation(
+            side="buy",from_index=12,to_index=23,confirmed_at=25,
+            start_price=90,end_price=110,
+            price_50=100,price_618=97.64,price_705=95.9,
+            price_786=94.28,zone_low=94.28,zone_high=97.64,
+            latest_close=100,status="AGUARDANDO_RETRACAO_OTE"
+        )
+        with patch("smc_agent.engine.macro_bias",return_value=1), \
+             patch("smc_agent.engine.order_blocks",return_value=[z]), \
+             patch("smc_agent.fibonacci.observe_fibonacci",return_value=missing):
+            self.assertIsNone(analyze(macro,entry,require_fibonacci=True))
+            # The legacy signal is unaffected by activating an optional
+            # filter in a separate research experiment.
+            self.assertIsNotNone(analyze(macro,entry))
+
     def test_analyze_optional_fib_keeps_default_behavior(self):
         # Unit test optional filter without manufacturing an engine setup.
         from smc_agent.engine import macro_bias
