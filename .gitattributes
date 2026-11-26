@@ -1,0 +1,5 @@
+# Windows CMD requires CRLF. Keep BAT/CMD scripts compatible in ZIP and git checkouts.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+# Python and docs stay LF-normalized.
+*.py text eol=lf
