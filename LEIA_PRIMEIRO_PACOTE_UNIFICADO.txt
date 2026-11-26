@@ -40,7 +40,7 @@ COMO FUNCIONA A EXPERIENCIA UNICA DE TESTE
    encerre primeiro com Ctrl+C e confirme S se solicitado.
 
 RESTRICOES IMPORTANTES ANTES DE UM ROBÔ AUTONOMO
-- Ainda faltam verificacao de sessoes e feriados especÃ­ficos
+- Ainda faltam verificacao de sessoes e feriados especificos
   por instrumento, sincronizacao persistente de ordens e posicoes,
   calculo de margem e volume baseado em dados confirmados da XM,
   protecao por perda real da conta e politica de encerramento.
