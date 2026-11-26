@@ -19,6 +19,9 @@ ATUALIZAÇÃO 0.10 — DIAGNÓSTICO REAL +02:00 (26/11/2026)
 • Não altere o relógio do Windows e nunca habilite negociação automática.
 • Para testar, use a pasta extraída v0.10 e o mesmo
   INICIAR_MONITOR_XM_DEMO.bat. Não precisa instalar Python/MT5 de novo.
+• Se quiser testar a lógica do software sem dados reais, dê dois cliques em
+  TESTAR_CODIGO_OFFLINE.bat e veja se o resultado termina com "OK".
+  Esse teste é opcional e não comprova que o MT5 ao vivo foi integrado.
 
 PASSO 1 — PREPARAR O COMPUTADOR (WINDOWS)
 • Tenha o MetaTrader 5 da XM aberto e conectado à conta DEMO.
