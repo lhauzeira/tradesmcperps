@@ -1,5 +1,29 @@
 # SMC Trading Agent — Builders Prototype
 
+## Prévia de solicitações MT5 (sem transmissão)
+
+O módulo smc_agent/mt5_request_preview.py gera somente um **rascunho**
+dos campos necessários para abertura e fechamento de posição no MT5,
+com constantes de API e regras de contrato fornecidas explicitamente
+pelo chamador. Não importa MetaTrader5, não chama order_send, não
+consulta contas, não valida a permissão real de negociação.
+
+Testa:
+- BUY por Ask, SELL por Bid, stop e alvo de cada instrumento;
+- volume dentro de min/max/step e preço alinhado ao tick size;
+- distância mínima de stop conforme valor informado em pontos;
+- fechamento de LONG via SELL/Bid, SHORT via BUY/Ask;
+- ticket obrigatório para fechar a posição correta;
+- política de preenchimento explícita em vez de assumir compatibilidade.
+
+Os rascunhos **não autorizam** execução: um executor futuro deverá
+validar a conta DEMO atual, sessão/feriados, contratos ao vivo, modo
+de filling, posição e ticket no MT5, SL/TP efetivos, margem, risco,
+retcodes, intervalos de preço e duplicidade após falha de rede.
+
+O iniciador ABRIR_SMC_AGENT.bat inclui o teste desse rascunho na
+opção 1. Não há botão para enviar nem fechar ordens.
+
 ## Núcleo de autonomia em laboratório (100% FICTÍCIO)
 
 **smc_agent/paper_orchestrator.py** liga, em uma mesma sequência:
