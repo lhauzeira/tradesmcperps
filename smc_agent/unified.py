@@ -28,6 +28,7 @@ def validate_all(*, root: Path | None = None) -> int:
         ("CICLO FICTICIO DE ABERTURA/FECHAMENTO", [sys.executable, "-m", "smc_agent.paper_execution"]),
         ("ORCAMENTO FICTICIO DE RISCO", [sys.executable, "-m", "smc_agent.multi_risk"]),
         ("PREFLIGHT E REINICIO SIMULADOS", [sys.executable, "-m", "smc_agent.dry_run_pipeline"]),
+        ("CICLO PAPER AUTONOMO FICTICIO", [sys.executable, "-m", "smc_agent.paper_orchestrator"]),
     )
     for label, argv in commands:
         print(f"\n--- {label} ---", flush=True)
@@ -36,7 +37,7 @@ def validate_all(*, root: Path | None = None) -> int:
             print(f"\nFALHOU: {label}. Nenhum monitor foi iniciado.", flush=True)
             return result.returncode
     print("\n" + "=" * 67, flush=True)
-    print("VALIDACAO OFFLINE CONCLUIDA: TESTES E TRES ENSAIOS FICTICIOS OK.", flush=True)
+    print("VALIDACAO OFFLINE CONCLUIDA: TESTES E QUATRO ENSAIOS FICTICIOS OK.", flush=True)
     print("Isso NAO comprova lucro, execucao na corretora ou sistema final.", flush=True)
     print("Nenhuma ordem enviada.", flush=True)
     return 0
@@ -71,6 +72,7 @@ def main(argv: list[str] | None = None) -> int:
             "Preflight XM DEMO: order_calc_profit/margin, posicoes/ordens (read-only)\n"
             "Preflight EXIGE evidencias recentes de preco, sessao continua bloqueada\n"
             "Intencoes em SQLite: deduplicacao e quarentena apos reinicio\n"
+            "Orquestrador paper: risco, abertura, saida, reinicio (apenas dados ficticios)\n"
             "Ciclo paper e orcamento de risco: dados ficticios\n"
             "MFP: adaptador preliminar nao homologado\n"
             "Enviar/fechar ordens: NAO IMPLEMENTADO NESTA CANDIDATA\n"
