@@ -16,6 +16,7 @@ import webbrowser
 from .monitor_local import capture, check_demo_account, _atomic_html, _fmt_price
 from .journal import SignalJournal
 from .lifecycle import PublishedSignal
+from .readiness import ReadinessReport, evaluate_readiness
 
 SYMBOL_RE = re.compile(r"^[A-Za-z0-9._#-]{1,40}$")
 
@@ -25,6 +26,7 @@ class MarketRow:
     symbol: str
     snapshot: object | None
     error: str | None
+    readiness: ReadinessReport | None = None
 
 
 def read_symbol_list(path: str | Path) -> tuple[str, ...]:
@@ -58,7 +60,15 @@ def observe_one(mt5, symbol: str) -> MarketRow:
         # MT5Adapter is a lightweight wrapper over the same initialized MT5
         # module; it does not connect/shutdown per symbol.
         snap = capture(MT5Adapter(symbol))
-        return MarketRow(symbol, replace(snap,price_digits=digits), None)
+        snap = replace(snap, price_digits=digits)
+        # A trading-mode flag alone does NOT prove today's broker session
+        # or holiday calendar. v0.13 intentionally keeps that check false.
+        readiness = evaluate_readiness(
+            snap, spec,
+            trade_mode_full=getattr(mt5, "SYMBOL_TRADE_MODE_FULL", None),
+            session_verified=False,
+        )
+        return MarketRow(symbol, snap, None, readiness)
     except Exception as exc:
         return MarketRow(symbol,None,str(exc).replace("\n"," ")[:160])
 
@@ -86,6 +96,20 @@ def render_market_table(rows: tuple[MarketRow, ...], now_iso: str) -> str:
                  f'<p>50%: {fmt(f.price_50)} · 61,8%: {fmt(f.price_618)} · '
                  f'70,5%: {fmt(f.price_705)} · 78,6%: {fmt(f.price_786)}</p>'
                  f'<p>Estado: {escape(f.status,quote=True)}</p>')
+        safety = row.readiness
+        if safety is None:
+            safety_html = "<p>Pré-execução ainda não avaliada. Ordens bloqueadas.</p>"
+        else:
+            codes = ", ".join(safety.block_codes) if safety.block_codes else "SEM_ALERTAS_DE_COTACAO"
+            ratio = ("—" if safety.spread_to_m5_atr is None
+                     else f"{safety.spread_to_m5_atr:.1%}")
+            safety_html = (
+                f'<p><strong>Portão de execução: {escape(safety.status)}</strong></p>'
+                f'<p>Spread / ATR M5: {escape(ratio)} · '
+                f'Condições pendentes: {escape(codes)}</p>'
+                '<p>Este diagnóstico NÃO libera ordens. '
+                'Sessões e feriados da corretora ainda não foram validados.</p>'
+            )
         signal = s.record
         alert=('<p>Sem novo setup SMC confirmado.</p>' if signal is None else
                f'<p class="warning">APENAS PESQUISA — '
@@ -101,7 +125,7 @@ def render_market_table(rows: tuple[MarketRow, ...], now_iso: str) -> str:
             f'<div>H1<br><b>{escape(s.h1_bias)}</b></div></div>'
             f'<p>M5 fechado UTC: {escape(s.last_closed_m5_utc or "—")}</p>'
             f'<p>Deslocamento observado: {escape(s.clock_offset_label)}</p>'
-            f'{fib}{alert}</section>'
+            f'{fib}{safety_html}{alert}</section>'
         )
     return f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta http-equiv="refresh" content="30"><meta name="viewport"
@@ -119,6 +143,9 @@ b{{font-size:21px;color:#fff}}h1{{font-size:27px}}h2{{font-size:19px}}
 <h1>SMC Trading Agent — Multiativos (DEMO)</h1>
 <p>Monitor local de leitura, sem ordens. Fibonacci é observacional e NÃO
 filtra os sinais ainda. Estratégia não validada financeiramente.</p>
+<p>Diagnóstico pré-execução: cotação, spread/ATR e especificações de
+cada ativo. A verificação de sessão/feriado está PENDENTE.
+Nenhuma condição exibida equivale a autorização para enviar ordens.</p>
 {''.join(cards)}
 <p>Atualização UTC: {escape(now_iso)} · Ordens enviadas: 0 ·
 Deslocamento horário provisório, sem validar histórico ou corretoras distintas.</p>
@@ -159,7 +186,10 @@ def monitor_many(*, root: Path | None = None, once: bool = False,
                                 "symbol":row.symbol,"close_utc":s.last_closed_m5_utc,
                                 "bias_h1":s.h1_bias,
                                 "fibonacci":s.fibonacci.status if s.fibonacci else "SEM_SWING",
-                                "signal":s.record is not None
+                                "signal":s.record is not None,
+                                "pretrade_blocks":list(row.readiness.block_codes)
+                                    if row.readiness is not None else ["SEM_VERIFICACAO"],
+                                "orders_sent":0
                             },ensure_ascii=False)+"\n")
                     if s.record is not None:
                         ev=s.record
