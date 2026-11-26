@@ -60,7 +60,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.status:
         print(
             "SMC AGENT — RELEASE CANDIDATE UNIFICADA\n"
-            "SMC M5/H1: experimental\n"
+            "SMC H1/M5: gatilho experimental original preservado\n"
+            "Estrutura H4/H1/M30/M15/M5: contexto adicional, nao filtra sinais\n"
             "Fibonacci: contexto OTE, nao obrigatorio para sinais\n"
             "Monitor multiativos XMGlobal-MT5 5: somente conta DEMO\n"
             "Diagnostico pre-ordens: nao autoriza ordens\n"
