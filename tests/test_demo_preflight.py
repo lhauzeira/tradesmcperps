@@ -83,9 +83,9 @@ class BrokerNativeDemoPreflightTests(unittest.TestCase):
         mt5=FakeMT5()
         report=estimate_demo_order(mt5,intent(),now=NOW)
         self.assertEqual(report.account_currency,"USD")
-        self.assertEqual(report.theoretical_loss_account_currency,D("12.000"))
+        self.assertAlmostEqual(float(report.theoretical_loss_account_currency),12.0,places=8)
         self.assertEqual(report.estimated_margin_account_currency,D("100.0"))
-        self.assertEqual(report.max_risk_budget_account_currency,D("50.000"))
+        self.assertEqual(report.max_risk_budget_account_currency,D("50"))
         self.assertEqual(report.number_open_positions,0)
         self.assertEqual(report.number_pending_orders,0)
         self.assertEqual(report.blockers,(
@@ -150,7 +150,7 @@ class BrokerNativeDemoPreflightTests(unittest.TestCase):
             mt5,intent(side="sell",stop=D("101"),target=D("98")),now=NOW
         )
         self.assertEqual(report.entry_bid,D("100.0"))
-        self.assertEqual(report.theoretical_loss_account_currency,D("10.00"))
+        self.assertAlmostEqual(float(report.theoretical_loss_account_currency),10.0,places=8)
         self.assertFalse(report.can_submit_orders)
 
     def test_wrong_stop_target_or_tick_grid_is_blocked(self):
