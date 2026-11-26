@@ -83,13 +83,16 @@ def classify_signal_context(
     else:
         inter_label = "MISTO_OU_NEUTRO"
 
-    # Useful cohort labels for later out-of-sample analysis, NOT a gate.
-    if h4_label == "H4_A_FAVOR" and yes >= 1 and len(missing) == 0:
-        label = "CONFLUENCIA_COMPLETA_OBSERVADA"
+    # Distinguish genuinely all-five-aligned from mixed/partial context.
+    # Labels describe observations only; NEVER expected profits or orders.
+    if missing:
+        label = "COBERTURA_INSUFICIENTE"
     elif h4_label == "H4_CONTRA":
         label = "CONTRA_FLUXO_H4"
-    elif h4_label == "H4_INDISPONIVEL" or len(missing):
-        label = "COBERTURA_INSUFICIENTE"
+    elif len(matched) == 5:
+        label = "CINCO_PERIODOS_ALINHADOS"
+    elif h4_label == "H4_A_FAVOR" and "H1" in matched and yes >= 1:
+        label = "CONFLUENCIA_PARCIAL_OBSERVADA"
     else:
         label = "CONFLUENCIA_NAO_CONFIRMADA"
 
