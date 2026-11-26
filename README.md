@@ -1,5 +1,44 @@
 # SMC Trading Agent — Builders Prototype
 
+## Cinco períodos de análise — H4/H1/M30/M15/M5
+
+A partir desta candidata integrada, o monitor XM DEMO exibe a
+**estrutura confirmada** dos cinco períodos para cada símbolo.
+
+- H4 — estrutura de prazo mais amplo.
+- H1 — viés principal da estratégia SMC já existente.
+- M30 — estrutura intermediária.
+- M15 — estrutura intermediária mais curta.
+- M5 — estrutura de execução já existente; continua sendo
+  analisada por candles totalmente fechados.
+
+O novo módulo smc_agent/multi_timeframe.py coleta H4, M30 e M15
+diretamente da API MT5 em modo leitura, via copy_rates_from_pos
+com posição inicial **1** (ignora o candle em formação).
+Reutiliza a análise H1 e M5 já lida pelo monitor, sem duplicar
+esses históricos. A estrutura usa pivôs confirmados e não
+antecipa candles futuros. Para cada período, mostra a
+direção ALTA/BAIXA/NEUTRO (quando os dados são válidos),
+último fechamento UTC, situação e motivo da indisponibilidade.
+
+O horário dos novos períodos é ajustado SOMENTE durante
+o diagnóstico AO VIVO pelo deslocamento provisório
+independentemente conciliado em M5, H1 e tick. Não
+pressupomos o mesmo fuso em dados históricos antigos.
+
+Uma ausência de dados, candle ainda aberto, horário
+divergente ou histórico insuficiente é marcada como
+INDISPONIVEL, jamais tratada como NEUTRO.
+
+**Não foi comprovado que exigir alinhamento entre os cinco
+períodos melhore a expectativa da estratégia.** Por isso,
+a versão integrada mantém o gatilho de sinais original
+H1/M5, e os demais períodos são contexto observacional.
+Após acumular dados com desfechos verificáveis,
+compararemos filtros multi-período fora da amostra
+antes de adotar qualquer bloqueio de sinal ou execução.
+O sistema permanece somente de leitura.
+
 ## Release candidate integrada RC1 — um único iniciador
 
 A pedido do usuário, as ferramentas existentes foram **consolidadas**
