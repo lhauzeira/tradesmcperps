@@ -53,6 +53,8 @@ def main(argv: list[str] | None = None) -> int:
                       help="Abrir o leitor SMC/Fibonacci multiativos XM DEMO SEM ORDENS")
     mode.add_argument("--status", action="store_true",
                       help="Mostrar capacidades e restrições verificáveis")
+    mode.add_argument("--diagnostico-demo", action="store_true",
+                      help="Ler SOMENTE especificações e cotações dos ativos XM DEMO")
     parser.add_argument("--intervalo",type=int,default=30,
                         help="Segundos entre atualizações no modo monitor")
     args = parser.parse_args(argv)
@@ -74,6 +76,10 @@ def main(argv: list[str] | None = None) -> int:
             "Enviar/fechar ordens: NAO IMPLEMENTADO NESTA CANDIDATA\n"
             "Lucratividade: NAO DEMONSTRADA\n"
         )
+        return 0
+    if args.diagnostico_demo:
+        from .demo_diagnostics import diagnose_open_demo
+        diagnose_open_demo()
         return 0
     # Connection takes place exclusively inside the older read-only monitor
     # which rejects real and unknown accounts before it reads any market.
