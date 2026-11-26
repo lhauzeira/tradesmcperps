@@ -11,6 +11,7 @@ on:
       - feature/xm-gold-risk-v05
       - feature/offline-paper-v06
       - feature/xm-gold-calendar-v07
+      - feature/mt5-demo-monitor-v08
   pull_request:
     branches:
       - main
@@ -19,6 +20,7 @@ on:
       - feature/native-quotes-v04
       - feature/xm-gold-risk-v05
       - feature/offline-paper-v06
+      - feature/xm-gold-calendar-v07
 
 permissions:
   contents: read
