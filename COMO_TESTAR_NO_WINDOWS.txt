@@ -1,3 +1,25 @@
+NOVO (v0.12) — ANALISE DE VARIOS ATIVOS COM FIBONACCI
+
+Se quiser manter apenas GOLD, continue com seu monitor antigo normalmente.
+O scanner multiativos e EXPERIMENTAL e ainda precisa de um teste real na XM.
+
+1. Encerre o monitor do GOLD com Ctrl+C (nao rode ambos simultaneamente).
+2. Baixe o ZIP da branch feature/multiasset-fibonacci-v12 e EXTRAIA TUDO.
+3. Abra ATIVOS_DEMO.txt. Em cada linha coloque um nome EXATO como
+   aparece na Observacao do Mercado do MT5. Ex.: GOLD, EURUSD, BTCUSD,
+   somente se o simbolo existir realmente na sua conta XM.
+   Ate 12 ativos. Linhas iniciadas por # estao desativadas.
+4. Execute TESTAR_CODIGO_OFFLINE.bat; nao deve precisar reinstalar Python.
+5. Com MT5 aberto em conta DEMO, execute
+   INICIAR_MONITOR_MULTIATIVOS_DEMO.bat.
+6. Veja PAINEL_MULTI_DEMO.html no navegador. Ele se atualiza com o
+   programa e o MT5 abertos. Um ativo pode aparecer "Nao avaliado"
+   sem impedir os outros.
+7. Os sinais continuam apenas teóricos. Fibonacci e observacional,
+   NAO aumenta a certeza de resultado. O modulo nao opera.
+
+Para os fundamentos tecnicos, veja builders/MULTIASSET_FIBONACCI.md.
+
 GUIA PRÁTICO — SMC TRADING AGENT NO META TRADER 5 DA XM
 
 CORRECAO DE COMPATIBILIDADE WINDOWS (v0.11)
